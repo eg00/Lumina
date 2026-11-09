@@ -23,6 +23,7 @@
         "web-token/jwt-library": "^4.2"
     },
     "require-dev": {
+        "driftingly/rector-laravel": "^2.7",
         "fakerphp/faker": "^1.24",
         "larastan/larastan": "^3.9",
         "laravel/pail": "^1.2.5",
@@ -34,7 +35,10 @@
         "pestphp/pest": "^5.3",
         "pestphp/pest-plugin-laravel": "^5",
         "pestphp/pest-plugin-phpstan": "^5.3",
-        "phpunit/phpunit": "^13.4"
+        "pestphp/pest-plugin-rector": "^5.0",
+        "pestphp/pest-plugin-type-coverage": "^5.0",
+        "phpunit/phpunit": "^13.4",
+        "rector/rector": "^2.8"
     },
     "autoload": {
         "psr-4": {
@@ -62,9 +66,11 @@
             "@php artisan dev"
         ],
         "lint": [
+            "rector",
             "pint --parallel"
         ],
         "lint:check": [
+            "rector -n",
             "pint --parallel --test"
         ],
         "ci:check": [

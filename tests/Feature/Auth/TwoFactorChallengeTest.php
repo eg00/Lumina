@@ -8,7 +8,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
-class TwoFactorChallengeTest extends TestCase
+final class TwoFactorChallengeTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -42,7 +42,7 @@ class TwoFactorChallengeTest extends TestCase
 
         $this->get(route('two-factor.login'))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('auth/TwoFactorChallenge'),
             );
     }

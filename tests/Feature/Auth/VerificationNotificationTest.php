@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Notification;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
-class VerificationNotificationTest extends TestCase
+final class VerificationNotificationTest extends TestCase
 {
     use RefreshDatabase;
 

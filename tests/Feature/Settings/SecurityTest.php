@@ -9,7 +9,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Fortify\Features;
 use Tests\TestCase;
 
-class SecurityTest extends TestCase
+final class SecurityTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -30,7 +30,7 @@ class SecurityTest extends TestCase
         $this->actingAs($user)
             ->withSession(['auth.password_confirmed_at' => time()])
             ->get(route('security.edit'))
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('settings/Security')
                 ->where('canManagePasskeys', true)
                 ->where('passkeys', [])
@@ -68,7 +68,7 @@ class SecurityTest extends TestCase
             ->withSession(['auth.password_confirmed_at' => time()])
             ->get(route('security.edit'))
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page): Assert => $page
                 ->component('settings/Security')
                 ->where('canManagePasskeys', false)
                 ->where('passkeys', [])
