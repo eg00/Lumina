@@ -1,0 +1,90 @@
+services:
+    app:
+        build:
+            context: .
+            dockerfile: docker/app/Dockerfile
+            target: dev
+        restart: unless-stopped
+        ports:
+            - '${APP_PORT:-8080}:80'
+            - '${APP_PORT_SSL:-8443}:443'
+            - '${APP_PORT_SSL:-8443}:443/udp'
+        environment:
+            SERVER_NAME: ':80'
+            APP_BASE_PATH: '/app'
+            FRANKENPHP_CONFIG: 'worker ./vendor/laravel/octane/bin/frankenphp-worker.php'
+            APP_ENV: '${APP_ENV:-local}'
+            APP_KEY: '${APP_KEY}'
+            APP_DEBUG: '${APP_DEBUG:-true}'
+            DB_CONNECTION: pgsql
+            DB_HOST: db
+            DB_PORT: 5432
+            DB_DATABASE: '${DB_DATABASE:-lumina}'
+            DB_USERNAME: '${DB_USERNAME:-lumina}'
+            DB_PASSWORD: '${DB_PASSWORD:-secret}'
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            BROADCAST_CONNECTION: mercure
+            MERCURE_URL: 'http://127.0.0.1:80/.well-known/mercure'
+            MERCURE_PUBLIC_URL: 'http://localhost:${APP_PORT:-8080}/.well-known/mercure'
+            MERCURE_JWT_SECRET: '${MERCURE_JWT_SECRET:-lumina-jwt-secret-key-super-secure-change-in-prod}'
+        volumes:
+            - .:/app
+            - ./docker/app/Caddyfile:/etc/caddy/Caddyfile
+            - ./docker/app/Caddyfile:/etc/frankenphp/Caddyfile
+        depends_on:
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
+
+    db:
+        build:
+            context: ./docker/db
+            dockerfile: Dockerfile
+        image: lumina-db:18-alpine
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: '${DB_DATABASE:-lumina}'
+            POSTGRES_USER: '${DB_USERNAME:-lumina}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+        ports:
+            - '${FORWARD_DB_PORT:-5433}:5432'
+        volumes:
+            - db-data:/var/lib/postgresql
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'pg_isready -U ${DB_USERNAME:-lumina} -d ${DB_DATABASE:-lumina}',
+                ]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    redis:
+        image: redis:7-alpine
+        restart: unless-stopped
+        ports:
+            - '${FORWARD_REDIS_PORT:-6380}:6379'
+        volumes:
+            - redis-data:/data
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    ai-worker:
+        build:
+            context: ./docker/ai-worker
+            dockerfile: Dockerfile
+        restart: unless-stopped
+        ports:
+            - '8001:8000'
+        environment:
+            PORT: 8000
+
+volumes:
+    db-data:
+    redis-data:
