@@ -82,6 +82,9 @@ services:
         restart: unless-stopped
         ports:
             - '8001:8000'
+        volumes:
+            - ./docker/ai-worker/app:/app/app
+            - ./storage:/app/storage:ro
         environment:
             PORT: 8000
 
