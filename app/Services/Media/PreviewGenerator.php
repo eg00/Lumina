@@ -12,6 +12,8 @@ class PreviewGenerator
 {
     public function generateWebp(string $sourcePath, string $targetRelativePath, int $maxWidth): string
     {
+        ini_set('memory_limit', '512M');
+
         $content = file_get_contents($sourcePath);
         if ($content === false) {
             throw new RuntimeException('Unable to read file: '.$sourcePath);
@@ -50,6 +52,8 @@ class PreviewGenerator
 
     public function extractDominantColor(string $sourcePath): string
     {
+        ini_set('memory_limit', '512M');
+
         $content = file_get_contents($sourcePath);
         if ($content === false) {
             throw new RuntimeException("Unable to read file from $sourcePath");

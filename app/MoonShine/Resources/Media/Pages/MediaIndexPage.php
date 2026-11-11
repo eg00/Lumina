@@ -25,7 +25,7 @@ use Throwable;
 class MediaIndexPage extends IndexPage
 {
     #[\Override]
-    protected bool $isLazy = true;
+    protected bool $isLazy = false;
 
     /**
      * @return list<FieldContract>
@@ -34,11 +34,13 @@ class MediaIndexPage extends IndexPage
     {
         return [
             ID::make()->sortable(),
-            Image::make('Thumbnail', 'thumbnail_path'),
+            Image::make('Thumbnail', 'thumbnail_path')->disk('public'),
+            Text::make('File Path', 'file_path'),
             Text::make('Dominant Color', 'dominant_color'),
             Text::make('Captured At', 'captured_at'),
             Text::make('Mime Type', 'mime_type'),
-            Switcher::make('Ignored', 'is_ignored'),
+            Switcher::make('Favorite', 'is_favorite')->updateOnPreview(),
+            Switcher::make('Ignored', 'is_ignored')->updateOnPreview(),
         ];
     }
 

@@ -95,3 +95,64 @@ test('admin can view and update feature settings in moonshine', function (): voi
         ->and(Setting::get('features.tags'))->toBeTrue()
         ->and(Setting::get('features.default_sort'))->toBe('captured_at_asc');
 });
+
+test('admin can view media form and detail pages without type errors', function (): void {
+    $admin = MoonshineUser::factory()->create();
+    $file = MediaFile::factory()->create();
+
+    test()->withoutMiddleware(PreventRequestForgery::class)
+        ->actingAs($admin, 'moonshine');
+
+    $editResponse = test()->get("/admin/resource/media-resource/media-form-page/{$file->id}");
+    $editResponse->assertSuccessful();
+
+    $detailResponse = test()->get("/admin/resource/media-resource/media-detail-page/{$file->id}");
+    $detailResponse->assertSuccessful();
+});
+
+test('admin can create media tag with auto-generated slug', function (): void {
+    $admin = MoonshineUser::factory()->create();
+
+    test()->withoutMiddleware(PreventRequestForgery::class)
+        ->actingAs($admin, 'moonshine');
+
+    $response = test()->post('/admin/resource/media-tag-resource/crud', [
+        'name' => 'Mountain Trip',
+        'type' => 'user',
+    ]);
+
+    $response->assertSessionHasNoErrors();
+
+    test()->assertDatabaseHas('media_tags', [
+        'name' => 'Mountain Trip',
+        'slug' => 'mountain-trip',
+        'type' => 'user',
+    ]);
+});
+
+test('admin can toggle favorite and ignored via update-field in moonshine', function (): void {
+    $admin = MoonshineUser::factory()->create();
+    $file = MediaFile::factory()->create([
+        'is_favorite' => false,
+        'is_ignored' => false,
+    ]);
+
+    test()->withoutMiddleware(PreventRequestForgery::class)
+        ->actingAs($admin, 'moonshine');
+
+    $response = test()->put("/admin/update-field/column/media-resource/{$file->id}", [
+        'field' => 'is_favorite',
+        'value' => '1',
+    ]);
+
+    $response->assertSuccessful();
+    expect($file->fresh()->is_favorite)->toBeTrue();
+
+    $response2 = test()->put("/admin/update-field/column/media-resource/{$file->id}", [
+        'field' => 'is_ignored',
+        'value' => '1',
+    ]);
+
+    $response2->assertSuccessful();
+    expect($file->fresh()->is_ignored)->toBeTrue();
+});

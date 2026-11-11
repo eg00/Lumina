@@ -20,6 +20,10 @@ class ProcessMediaFileJob implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    public bool $deleteWhenMissingModels = true;
+
+    public int $tries = 3;
+
     /**
      * Create a new job instance.
      */
