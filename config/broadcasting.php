@@ -84,6 +84,13 @@ return [
             'cookie_name' => env('MERCURE_COOKIE_NAME'),
             'subscribe_expiration' => (int) env('MERCURE_SUBSCRIBE_EXPIRATION', 5),
             'async' => (bool) env('MERCURE_ASYNC', false),
+            'client_options' => [
+                'headers' => array_filter([
+                    'Host' => parse_url((string) env('MERCURE_PUBLIC_URL'), PHP_URL_HOST)
+                        ? parse_url((string) env('MERCURE_PUBLIC_URL'), PHP_URL_HOST).(parse_url((string) env('MERCURE_PUBLIC_URL'), PHP_URL_PORT) ? ':'.parse_url((string) env('MERCURE_PUBLIC_URL'), PHP_URL_PORT) : '')
+                        : null,
+                ]),
+            ],
         ],
 
         'log' => [
@@ -95,5 +102,7 @@ return [
         ],
 
     ],
+
+    'cookie_name' => env('MERCURE_COOKIE_NAME', 'mercure_access_token'),
 
 ];

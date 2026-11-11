@@ -5,6 +5,7 @@ services:
             dockerfile: docker/app/Dockerfile
             target: dev
         restart: unless-stopped
+        entrypoint: ["/app/docker/app/entrypoint.sh"]
         ports:
             - '${APP_PORT:-8080}:80'
             - '${APP_PORT_SSL:-8443}:443'
@@ -28,6 +29,11 @@ services:
             MERCURE_URL: 'http://127.0.0.1:80/.well-known/mercure'
             MERCURE_PUBLIC_URL: 'http://localhost:${APP_PORT:-8080}/.well-known/mercure'
             MERCURE_JWT_SECRET: '${MERCURE_JWT_SECRET:-lumina-jwt-secret-key-super-secure-change-in-prod}'
+            ADMIN_EMAIL: '${ADMIN_EMAIL}'
+            ADMIN_PASSWORD: '${ADMIN_PASSWORD}'
+            ADMIN_NAME: '${ADMIN_NAME:-Admin}'
+            INITIAL_MEDIA_PATH: '${INITIAL_MEDIA_PATH:-/app/storage/app/public}'
+            INITIAL_MEDIA_NAME: '${INITIAL_MEDIA_NAME:-Photos}'
         volumes:
             - .:/app
             - ./docker/app/Caddyfile:/etc/caddy/Caddyfile
