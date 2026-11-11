@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\MediaType;
 use App\Models\MediaEmbedding;
 use App\Models\MediaFile;
