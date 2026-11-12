@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import MediaViewer from '@/components/MediaViewer.vue';
@@ -20,11 +20,36 @@ defineProps<{
 const mapContainer = ref<HTMLElement | null>(null);
 let map: L.Map | null = null;
 let markersLayer: L.LayerGroup | null = null;
+let onMapClick: ((e: MouseEvent) => void) | null = null;
 
 const markers = ref<MediaItem[]>([]);
 const totalVisible = ref(0);
 const selectedItem = ref<MediaItem | null>(null);
 const isViewerOpen = ref(false);
+
+const currentIndex = computed(() => {
+    if (!selectedItem.value) return -1;
+    return markers.value.findIndex((m) => m.uuid === selectedItem.value!.uuid);
+});
+
+const hasNext = computed(
+    () =>
+        currentIndex.value >= 0 &&
+        currentIndex.value < markers.value.length - 1,
+);
+const hasPrev = computed(() => currentIndex.value > 0);
+
+function nextMedia() {
+    if (hasNext.value) {
+        selectedItem.value = markers.value[currentIndex.value + 1];
+    }
+}
+
+function prevMedia() {
+    if (hasPrev.value) {
+        selectedItem.value = markers.value[currentIndex.value - 1];
+    }
+}
 
 async function loadMarkers() {
     if (!map) return;
@@ -78,28 +103,27 @@ function renderMarkers(items: MediaItem[]) {
             icon: customIcon,
         });
 
-        const popupContent = document.createElement('div');
-        popupContent.className =
-            'flex flex-col gap-2 p-1 text-xs text-slate-200';
-        popupContent.innerHTML = `
-                <div class="h-28 w-44 overflow-hidden rounded-lg bg-slate-950">
-                    <img src="${thumbUrl}" class="h-full w-full object-cover" />
+        const popupHtml = `
+            <div class="flex flex-col gap-2 p-1 text-xs text-slate-200">
+                <div class="view-photo-btn h-28 w-44 overflow-hidden rounded-lg bg-slate-950 cursor-pointer group" data-uuid="${item.uuid}">
+                    <img src="${thumbUrl}" class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105" />
                 </div>
                 <div class="font-semibold text-white truncate max-w-[176px]">${item.place_name || item.city || 'Photo location'}</div>
-                <button type="button" class="mt-1 rounded bg-indigo-600 px-2 py-1 text-center font-medium text-white hover:bg-indigo-500">
+                <button type="button" class="view-photo-btn mt-1 rounded bg-indigo-600 px-2 py-1.5 text-center font-medium text-white hover:bg-indigo-500 cursor-pointer transition shadow" data-uuid="${item.uuid}">
                     View Photo
                 </button>
-            `;
+            </div>
+        `;
 
-        const btn = popupContent.querySelector('button');
-        btn?.addEventListener('click', () => {
-            selectedItem.value = item;
-            isViewerOpen.value = true;
-        });
-
-        marker.bindPopup(popupContent, {
+        marker.bindPopup(popupHtml, {
             className: 'dark-popup',
             maxWidth: 220,
+        });
+
+        marker.on('dblclick', (e) => {
+            L.DomEvent.stopPropagation(e);
+            selectedItem.value = item;
+            isViewerOpen.value = true;
         });
 
         markersLayer.addLayer(marker);
@@ -109,9 +133,30 @@ function renderMarkers(items: MediaItem[]) {
 onMounted(() => {
     if (!mapContainer.value) return;
 
+    const urlParams =
+        typeof window !== 'undefined'
+            ? new URLSearchParams(window.location.search)
+            : null;
+    const latParam = urlParams?.get('lat');
+    const lngParam = urlParams?.get('lng');
+    const zoomParam = urlParams?.get('zoom');
+
+    const lat = latParam ? parseFloat(latParam) : null;
+    const lng = lngParam ? parseFloat(lngParam) : null;
+
+    const initialCenter: [number, number] =
+        lat !== null && !isNaN(lat) && lng !== null && !isNaN(lng)
+            ? [lat, lng]
+            : [57.1344, 65.5811];
+    const initialZoom = zoomParam
+        ? parseInt(zoomParam, 10)
+        : lat !== null
+          ? 16
+          : 12;
+
     map = L.map(mapContainer.value, {
-        center: [57.1344, 65.5811],
-        zoom: 12,
+        center: initialCenter,
+        zoom: initialZoom,
         zoomControl: false,
     });
 
@@ -125,6 +170,44 @@ onMounted(() => {
 
     markersLayer = L.layerGroup().addTo(map);
 
+    // Click handler for popup buttons
+    const handleOpenPhoto = (uuid: string | null) => {
+        if (!uuid) return;
+        const found = markers.value.find((m) => m.uuid === uuid);
+        if (found) {
+            selectedItem.value = found;
+            isViewerOpen.value = true;
+        }
+    };
+
+    // 1. Direct binding via Leaflet popupopen event
+    map.on('popupopen', (e) => {
+        const popupNode = e.popup.getElement();
+        if (!popupNode) return;
+        const btns = popupNode.querySelectorAll('.view-photo-btn');
+        btns.forEach((btn) => {
+            btn.addEventListener('click', (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                handleOpenPhoto(btn.getAttribute('data-uuid'));
+            });
+        });
+    });
+
+    // 2. Fallback capturing listener on window (fires before Leaflet stopPropagation)
+    onMapClick = (e: MouseEvent) => {
+        const target = (e.target as HTMLElement | null)?.closest<HTMLElement>(
+            '.view-photo-btn',
+        );
+        if (target) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleOpenPhoto(target.getAttribute('data-uuid'));
+        }
+    };
+
+    window.addEventListener('click', onMapClick, true);
+
     map.on('moveend', () => {
         loadMarkers();
     });
@@ -133,6 +216,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+    if (onMapClick) {
+        window.removeEventListener('click', onMapClick, true);
+    }
     map?.remove();
     map = null;
 });
@@ -182,7 +268,13 @@ onUnmounted(() => {
 
         <MediaViewer
             :item="selectedItem"
+            :items="markers"
             :is-open="isViewerOpen"
+            :has-next="hasNext"
+            :has-prev="hasPrev"
+            @next="nextMedia"
+            @prev="prevMedia"
+            @select="selectedItem = $event"
             @close="
                 isViewerOpen = false;
                 selectedItem = null;

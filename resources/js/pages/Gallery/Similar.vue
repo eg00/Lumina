@@ -149,7 +149,7 @@ function formatSimilarity(distance?: number): string {
             >
                 <div
                     v-for="item in media.data"
-                    :key="item.id"
+                    :key="item.uuid"
                     class="group relative aspect-square cursor-pointer overflow-hidden rounded-lg bg-slate-900 shadow transition hover:ring-2 hover:ring-indigo-500"
                     :style="{
                         backgroundColor: item.dominant_color || '#1e293b',

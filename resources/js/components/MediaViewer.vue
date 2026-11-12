@@ -189,7 +189,7 @@ const formattedSize = computed(() => {
     <Teleport to="body">
         <div
             v-if="isOpen && item"
-            class="fixed inset-0 z-50 flex flex-col overflow-hidden bg-black/92 text-white backdrop-blur-xl select-none"
+            class="fixed inset-0 z-[9999] flex flex-col overflow-hidden bg-black/92 text-white backdrop-blur-xl select-none"
             @mousemove="resetHideTimer"
             @touchstart="handleTouchStart"
             @touchend="handleTouchEnd"
@@ -290,22 +290,24 @@ const formattedSize = computed(() => {
                     aria-label="Previous (←)"
                     @click.stop="emit('prev')"
                 >
-                    <ChevronLeft class="size-5 stroke-[2] sm:size-6" />
+                    <ChevronLeft class="size-5 stroke-2 sm:size-6" />
                 </button>
 
                 <!-- Next Button -->
                 <button
                     v-if="hasNext"
                     type="button"
-                    class="pointer-events-auto absolute right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-black/70 hover:text-white sm:right-6 sm:h-12 sm:w-12"
-                    :class="{
-                        'opacity-100': isChromeVisible || showInfo,
-                        'opacity-0': !isChromeVisible && !showInfo,
-                    }"
+                    class="pointer-events-auto absolute right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-black/70 hover:text-white sm:h-12 sm:w-12"
+                    :class="[
+                        isChromeVisible || showInfo
+                            ? 'opacity-100'
+                            : 'pointer-events-none opacity-0',
+                        showInfo ? 'sm:right-6 md:right-94' : 'sm:right-6',
+                    ]"
                     aria-label="Next (→)"
                     @click.stop="emit('next')"
                 >
-                    <ChevronRight class="size-5 stroke-[2] sm:size-6" />
+                    <ChevronRight class="size-5 stroke-2 sm:size-6" />
                 </button>
 
                 <!-- Media Display with Cinematic Transition -->
@@ -524,12 +526,10 @@ const formattedSize = computed(() => {
                                     {{ item.longitude.toFixed(4) }}
                                 </span>
                                 <a
-                                    :href="`https://www.google.com/maps?q=${item.latitude},${item.longitude}`"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    class="text-sky-400 underline hover:text-sky-300"
+                                    :href="`/map?lat=${item.latitude}&lng=${item.longitude}&zoom=16`"
+                                    class="text-sky-400 underline transition hover:text-sky-300"
                                 >
-                                    Open map ↗
+                                    Open in Map ↗
                                 </a>
                             </div>
                         </div>
