@@ -2,10 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\MediaStreamController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('home');
+Route::get('/', [GalleryController::class, 'index'])->name('home');
+Route::get('/view/{mediaFile}', [GalleryController::class, 'view'])->name('gallery.view');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');

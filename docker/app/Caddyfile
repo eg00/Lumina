@@ -17,6 +17,7 @@
         protocol_version_compatibility 8
         anonymous
         subscriptions
+        cors_origins *
     }
 
     root * /app/public

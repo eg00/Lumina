@@ -16,10 +16,13 @@ use MoonShine\Laravel\Resources\ModelResource;
  */
 class MediaTagResource extends ModelResource
 {
+    #[\Override]
     protected string $model = MediaTag::class;
 
+    #[\Override]
     protected string $title = 'Tags';
 
+    #[\Override]
     protected string $column = 'name';
 
     /**

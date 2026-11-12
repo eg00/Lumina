@@ -29,7 +29,7 @@ services:
             dockerfile: docker/app/Dockerfile
             target: dev
         restart: unless-stopped
-        entrypoint: ["/app/docker/app/entrypoint.sh"]
+        entrypoint: ['/app/docker/app/entrypoint.sh']
         ports:
             - '${APP_PORT:-8080}:80'
             - '${APP_PORT_SSL:-8443}:443'
@@ -51,8 +51,8 @@ services:
     queue:
         <<: *app-service-template
         ports: []
-        entrypoint: ["docker-php-entrypoint"]
-        command: ["php", "artisan", "queue:listen", "--tries=3", "--memory=512"]
+        entrypoint: ['docker-php-entrypoint']
+        command: ['php', 'artisan', 'queue:listen', '--tries=3', '--memory=512']
         environment:
             <<: *app-environment
         depends_on:

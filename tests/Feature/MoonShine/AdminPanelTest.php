@@ -146,7 +146,9 @@ test('admin can toggle favorite and ignored via update-field in moonshine', func
     ]);
 
     $response->assertSuccessful();
-    expect($file->fresh()->is_favorite)->toBeTrue();
+
+    $file->refresh();
+    expect($file->is_favorite)->toBeTrue();
 
     $response2 = test()->put("/admin/update-field/column/media-resource/{$file->id}", [
         'field' => 'is_ignored',
@@ -154,5 +156,7 @@ test('admin can toggle favorite and ignored via update-field in moonshine', func
     ]);
 
     $response2->assertSuccessful();
-    expect($file->fresh()->is_ignored)->toBeTrue();
+
+    $file->refresh();
+    expect($file->is_ignored)->toBeTrue();
 });

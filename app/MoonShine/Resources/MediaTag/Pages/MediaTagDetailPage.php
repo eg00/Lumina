@@ -8,7 +8,6 @@ use App\MoonShine\Resources\MediaTag\MediaTagResource;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Pages\Crud\DetailPage;
-use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Text;
@@ -30,11 +29,6 @@ class MediaTagDetailPage extends DetailPage
             Text::make('Slug', 'slug'),
             Text::make('Type', 'type')->badge(),
         ];
-    }
-
-    protected function buttons(): ListOf
-    {
-        return parent::buttons();
     }
 
     /**

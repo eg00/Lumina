@@ -11,7 +11,6 @@ use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Contracts\UI\FormBuilderContract;
 use MoonShine\Laravel\Fields\Slug;
 use MoonShine\Laravel\Pages\Crud\FormPage;
-use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\FormBuilder;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Select;
@@ -37,16 +36,6 @@ class MediaTagFormPage extends FormPage
                 'auto' => 'Auto',
             ])->default('user'),
         ];
-    }
-
-    protected function buttons(): ListOf
-    {
-        return parent::buttons();
-    }
-
-    protected function formButtons(): ListOf
-    {
-        return parent::formButtons();
     }
 
     protected function rules(DataWrapperContract $item): array
