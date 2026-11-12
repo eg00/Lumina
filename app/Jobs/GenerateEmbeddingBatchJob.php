@@ -12,6 +12,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Storage;
 
 class GenerateEmbeddingBatchJob implements ShouldQueue
 {
@@ -38,14 +39,15 @@ class GenerateEmbeddingBatchJob implements ShouldQueue
         $pathMap = [];
         foreach ($files as $file) {
             if ($file->preview_path) {
-                $pathMap[$file->preview_path] = $file->id;
+                $fullPath = Storage::disk('public')->path($file->preview_path);
+                $pathMap[$fullPath] = $file->id;
             }
         }
 
         $results = $clipService->embedBatch(array_keys($pathMap));
 
-        foreach ($results as $previewPath => $vector) {
-            $fileId = $pathMap[$previewPath] ?? null;
+        foreach ($results as $fullPath => $vector) {
+            $fileId = $pathMap[$fullPath] ?? null;
             if ($fileId) {
                 MediaEmbedding::query()->updateOrCreate(
                     ['media_file_id' => $fileId],

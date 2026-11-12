@@ -5,6 +5,7 @@ import { subscribeToMercure } from '@/echo';
 import ScanProgressBar from '@/components/ScanProgressBar.vue';
 import TimelineGrid, { type MediaItem } from '@/components/TimelineGrid.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
+import SearchBar from '@/components/SearchBar.vue';
 
 interface PaginatedMedia {
     data: MediaItem[];
@@ -28,6 +29,7 @@ const props = defineProps<{
     };
     activeMediaId?: number;
     activeMediaItem?: MediaItem;
+    searchQuery?: string;
 }>();
 
 const page = usePage();
@@ -266,6 +268,11 @@ onUnmounted(() => {
                     >
                 </div>
 
+                <SearchBar
+                    :initial-query="props.searchQuery"
+                    class="hidden max-w-md flex-1 sm:block"
+                />
+
                 <div class="flex items-center gap-3">
                     <button
                         type="button"
@@ -299,19 +306,26 @@ onUnmounted(() => {
                             Modified date (oldest)
                         </option>
                     </select>
-
-                    <!-- Admin Link -->
-                    <a
-                        href="/admin"
-                        class="rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
-                    >
-                        Admin Panel
-                    </a>
                 </div>
             </div>
         </header>
 
         <main class="max-auto mx-auto px-4 py-6 sm:px-6">
+            <div
+                v-if="props.searchQuery"
+                class="mb-6 flex items-center justify-between rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-xs text-indigo-300"
+            >
+                <span>
+                    Showing results for:
+                    <strong class="font-semibold text-white"
+                        >"{{ props.searchQuery }}"</strong
+                    >
+                    ({{ items.length }} found)
+                </span>
+                <a href="/" class="font-medium underline hover:text-white"
+                    >Clear search</a
+                >
+            </div>
             <TimelineGrid
                 v-if="items.length > 0"
                 :items="items"
@@ -340,15 +354,6 @@ onUnmounted(() => {
                 <h3 class="text-base font-semibold text-slate-200">
                     No media files found
                 </h3>
-                <p class="mt-1 text-sm text-slate-400">
-                    Add a media source and run a scan in the admin panel.
-                </p>
-                <a
-                    href="/admin"
-                    class="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow transition hover:bg-indigo-500"
-                >
-                    Go to Admin Panel
-                </a>
             </div>
         </main>
         <MediaViewer

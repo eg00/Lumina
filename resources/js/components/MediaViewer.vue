@@ -126,6 +126,27 @@ const formattedSize = computed(() => {
                 </div>
 
                 <div class="flex items-center gap-2">
+                    <!-- Find Similar Button -->
+                    <a
+                        :href="'/media/' + item.id + '/similar'"
+                        class="flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-600/20 px-3 py-1.5 text-xs font-medium text-indigo-300 transition hover:bg-indigo-600/30 hover:text-white"
+                        title="Find visually similar photos"
+                    >
+                        <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                            />
+                        </svg>
+                        <span>Similar</span>
+                    </a>
                     <!-- Share Button -->
                     <button
                         type="button"
@@ -449,6 +470,25 @@ const formattedSize = computed(() => {
                     <div
                         class="mt-auto flex flex-col gap-2 border-t border-slate-800 pt-4"
                     >
+                        <a
+                            :href="'/media/' + item.id + '/similar'"
+                            class="flex items-center justify-center gap-2 rounded-lg border border-indigo-500/30 bg-indigo-600/20 py-2 font-medium text-indigo-300 transition hover:bg-indigo-600/30 hover:text-white"
+                        >
+                            <svg
+                                class="h-4 w-4"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                            >
+                                <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                />
+                            </svg>
+                            Find Similar
+                        </a>
                         <a
                             :href="'/media/' + item.id + '/stream'"
                             target="_blank"

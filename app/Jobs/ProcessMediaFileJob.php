@@ -6,6 +6,7 @@ namespace App\Jobs;
 
 use App\Events\MediaProcessedEvent;
 use App\Models\MediaFile;
+use App\Models\Setting;
 use App\Services\Media\ExifExtractor;
 use App\Services\Media\PreviewGenerator;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -73,5 +74,9 @@ class ProcessMediaFileJob implements ShouldQueue
             dominantColor: $dominantColor,
             capturedAt: $file->captured_at?->toIso8601String(),
         );
+
+        if ($previewPath && Setting::get('features.ai_search', true)) {
+            GenerateEmbeddingBatchJob::dispatch([$file->id]);
+        }
     }
 }
