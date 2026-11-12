@@ -42,6 +42,13 @@ use Illuminate\Support\Str;
  * @property ?string $country
  * @property ?string $city
  * @property ?string $place_name
+ * @property ?string $camera_make
+ * @property ?string $camera_model
+ * @property ?string $lens_model
+ * @property ?string $f_number
+ * @property ?string $exposure_time
+ * @property ?int $iso
+ * @property ?string $focal_length
  * @property ?string $dominant_color
  * @property bool $is_favorite
  * @property bool $is_ignored
@@ -77,6 +84,13 @@ use Illuminate\Support\Str;
     'country',
     'city',
     'place_name',
+    'camera_make',
+    'camera_model',
+    'lens_model',
+    'f_number',
+    'exposure_time',
+    'iso',
+    'focal_length',
     'dominant_color',
     'is_favorite',
     'is_ignored',

@@ -30,6 +30,11 @@ class ExifExtractor
                         longitude: $exifToolData->longitude,
                         cameraMake: $exifToolData->cameraMake,
                         cameraModel: $exifToolData->cameraModel,
+                        lensModel: $exifToolData->lensModel,
+                        fNumber: $exifToolData->fNumber,
+                        exposureTime: $exifToolData->exposureTime,
+                        iso: $exifToolData->iso,
+                        focalLength: $exifToolData->focalLength,
                         height: $exifToolData->height ?? $imageInfo[1],
                         width: $exifToolData->width ?? $imageInfo[0],
                     );
@@ -57,6 +62,11 @@ class ExifExtractor
                 '-MediaCreateDate',
                 '-Make',
                 '-Model',
+                '-LensModel',
+                '-FNumber',
+                '-ExposureTime',
+                '-ISO',
+                '-FocalLength',
                 '-ImageWidth',
                 '-ImageHeight',
                 '-SourceImageWidth',
@@ -100,6 +110,7 @@ class ExifExtractor
             if ($width === null && isset($data['SourceImageWidth']) && is_numeric($data['SourceImageWidth'])) {
                 $width = (int) $data['SourceImageWidth'];
             }
+
             if ($height === null && isset($data['SourceImageHeight']) && is_numeric($data['SourceImageHeight'])) {
                 $height = (int) $data['SourceImageHeight'];
             }
@@ -113,12 +124,32 @@ class ExifExtractor
                 }
             }
 
+            $fNumber = isset($data['FNumber']) && is_numeric($data['FNumber']) ? (string) round((float) $data['FNumber'], 1) : null;
+            $exposureTime = null;
+            if (isset($data['ExposureTime']) && is_numeric($data['ExposureTime'])) {
+                $exp = (float) $data['ExposureTime'];
+                if ($exp > 0 && $exp < 1) {
+                    $exposureTime = '1/'.round(1 / $exp);
+                } else {
+                    $exposureTime = (string) round($exp, 2);
+                }
+            }
+
+            $iso = isset($data['ISO']) && is_numeric($data['ISO']) ? (int) $data['ISO'] : null;
+            $focalLength = isset($data['FocalLength']) && is_numeric($data['FocalLength']) ? (string) round((float) $data['FocalLength'], 1) : null;
+            $lensModel = isset($data['LensModel']) ? (string) $data['LensModel'] : null;
+
             return new ExifData(
                 capturedAt: $capturedAt,
                 latitude: $lat,
                 longitude: $lon,
                 cameraMake: isset($data['Make']) ? (string) $data['Make'] : null,
                 cameraModel: isset($data['Model']) ? (string) $data['Model'] : null,
+                lensModel: $lensModel,
+                fNumber: $fNumber,
+                exposureTime: $exposureTime,
+                iso: $iso,
+                focalLength: $focalLength,
                 height: $height,
                 width: $width,
             );
@@ -140,6 +171,11 @@ class ExifExtractor
         $longitude = null;
         $cameraMake = null;
         $cameraModel = null;
+        $lensModel = null;
+        $fNumber = null;
+        $exposureTime = null;
+        $iso = null;
+        $focalLength = null;
 
         if ($imageType !== null && in_array($imageType, $supportedExifTypes, true)) {
             $exif = @exif_read_data($filePath, 'ANY_TAG', true);
@@ -156,6 +192,25 @@ class ExifExtractor
                 [$latitude, $longitude] = $this->extractGps($exif);
                 $cameraMake = isset($exif['IFD0']['Make']) ? (string) $exif['IFD0']['Make'] : null;
                 $cameraModel = isset($exif['IFD0']['Model']) ? (string) $exif['IFD0']['Model'] : null;
+                $lensModel = isset($exif['EXIF']['LensModel']) ? (string) $exif['EXIF']['LensModel'] : null;
+
+                if (isset($exif['COMPUTED']['ApertureFNumber'])) {
+                    $fNumber = str_replace('f/', '', (string) $exif['COMPUTED']['ApertureFNumber']);
+                } elseif (isset($exif['EXIF']['FNumber'])) {
+                    $fNumber = (string) round($this->evalRational((string) $exif['EXIF']['FNumber']), 1);
+                }
+
+                if (isset($exif['EXIF']['ExposureTime'])) {
+                    $exposureTime = (string) $exif['EXIF']['ExposureTime'];
+                }
+
+                if (isset($exif['EXIF']['ISOSpeedRatings']) && is_numeric($exif['EXIF']['ISOSpeedRatings'])) {
+                    $iso = (int) $exif['EXIF']['ISOSpeedRatings'];
+                }
+
+                if (isset($exif['EXIF']['FocalLength'])) {
+                    $focalLength = (string) round($this->evalRational((string) $exif['EXIF']['FocalLength']), 1);
+                }
 
                 $orientation = $exif['IFD0']['Orientation'] ?? $exif['Orientation'] ?? null;
                 if ($orientation !== null && in_array((int) $orientation, [5, 6, 7, 8], true)) {
@@ -170,6 +225,11 @@ class ExifExtractor
             longitude: $longitude,
             cameraMake: $cameraMake,
             cameraModel: $cameraModel,
+            lensModel: $lensModel,
+            fNumber: $fNumber,
+            exposureTime: $exposureTime,
+            iso: $iso,
+            focalLength: $focalLength,
             height: $height,
             width: $width,
         );

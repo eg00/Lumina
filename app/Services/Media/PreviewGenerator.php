@@ -109,6 +109,7 @@ class PreviewGenerator
                 if ($rotated !== false) {
                     $image = $rotated;
                 }
+
                 break;
             case 4:
                 imageflip($image, IMG_FLIP_VERTICAL);
@@ -119,12 +120,14 @@ class PreviewGenerator
                     $image = $rotated;
                     imageflip($image, IMG_FLIP_HORIZONTAL);
                 }
+
                 break;
             case 6:
                 $rotated = imagerotate($image, -90, 0);
                 if ($rotated !== false) {
                     $image = $rotated;
                 }
+
                 break;
             case 7:
                 $rotated = imagerotate($image, 90, 0);
@@ -132,12 +135,14 @@ class PreviewGenerator
                     $image = $rotated;
                     imageflip($image, IMG_FLIP_HORIZONTAL);
                 }
+
                 break;
             case 8:
                 $rotated = imagerotate($image, 90, 0);
                 if ($rotated !== false) {
                     $image = $rotated;
                 }
+
                 break;
         }
 

@@ -38,6 +38,8 @@ test('processing job generates webp thumbnails, extracts dominant color and broa
         ->and($mediaFile->dominant_color)->toMatch('/^#[0-9a-fA-F]{6}$/')
         ->and($mediaFile->latitude)->not->toBeNull()
         ->and($mediaFile->longitude)->not->toBeNull()
+        ->and($mediaFile->camera_make)->toBe('Sony')
+        ->and($mediaFile->camera_model)->toBe('ILCE-7M4')
         ->and($mediaFile->captured_at)->not->toBeNull();
 
     Storage::disk('public')->assertExists((string) $mediaFile->thumbnail_path);

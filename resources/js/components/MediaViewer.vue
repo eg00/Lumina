@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+    Camera,
     ChevronLeft,
     ChevronRight,
     Copy,
@@ -182,6 +183,29 @@ const formattedSize = computed(() => {
     return mb >= 1
         ? `${mb.toFixed(1)} MB`
         : `${Math.round(props.item.file_size / 1024)} KB`;
+});
+
+const cameraName = computed(() => {
+    if (!props.item) return null;
+    const make = props.item.camera_make?.trim() || '';
+    const model = props.item.camera_model?.trim() || '';
+    if (!make && !model) return null;
+    if (model.toLowerCase().startsWith(make.toLowerCase())) {
+        return model;
+    }
+    return `${make} ${model}`.trim();
+});
+
+const hasShootingData = computed(() => {
+    if (!props.item) return false;
+    return !!(
+        cameraName.value ||
+        props.item.lens_model ||
+        props.item.f_number ||
+        props.item.exposure_time ||
+        props.item.iso ||
+        props.item.focal_length
+    );
 });
 </script>
 
@@ -471,24 +495,90 @@ const formattedSize = computed(() => {
                                     >{{ item.width }} × {{ item.height }}</span
                                 >
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Camera & Shooting Parameters Card -->
+                    <div v-if="hasShootingData" class="flex flex-col gap-2">
+                        <span
+                            class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase"
+                        >
+                            Camera & Optics
+                        </span>
+                        <div
+                            class="flex flex-col gap-2 rounded-xl border border-white/5 bg-white/[0.03] p-3"
+                        >
+                            <!-- Camera Model -->
                             <div
-                                v-if="item.dominant_color"
-                                class="flex items-center justify-between"
+                                v-if="cameraName"
+                                class="flex items-center gap-2 text-sm font-medium text-white"
                             >
-                                <span class="text-slate-400"
-                                    >Dominant Color</span
+                                <Camera class="size-4 shrink-0 text-sky-400" />
+                                <span class="truncate">{{ cameraName }}</span>
+                            </div>
+
+                            <!-- Lens Model -->
+                            <div
+                                v-if="item.lens_model"
+                                class="truncate text-xs text-slate-300"
+                            >
+                                {{ item.lens_model }}
+                            </div>
+
+                            <!-- Exposure Badges Grid -->
+                            <div
+                                v-if="
+                                    item.f_number ||
+                                    item.exposure_time ||
+                                    item.iso ||
+                                    item.focal_length
+                                "
+                                class="mt-1 grid grid-cols-4 gap-1 rounded-lg border border-white/5 bg-black/20 p-2 text-center"
+                            >
+                                <div v-if="item.f_number" class="flex flex-col">
+                                    <span
+                                        class="text-[9px] tracking-wider text-slate-400 uppercase"
+                                        >Aperture</span
+                                    >
+                                    <span
+                                        class="font-mono text-xs font-semibold text-slate-200"
+                                        >f/{{ item.f_number }}</span
+                                    >
+                                </div>
+                                <div
+                                    v-if="item.exposure_time"
+                                    class="flex flex-col"
                                 >
-                                <div class="flex items-center gap-1.5">
                                     <span
-                                        class="size-3 rounded-full border border-white/20"
-                                        :style="{
-                                            backgroundColor:
-                                                item.dominant_color,
-                                        }"
-                                    ></span>
+                                        class="text-[9px] tracking-wider text-slate-400 uppercase"
+                                        >Shutter</span
+                                    >
                                     <span
-                                        class="font-mono text-white uppercase"
-                                        >{{ item.dominant_color }}</span
+                                        class="font-mono text-xs font-semibold text-slate-200"
+                                        >{{ item.exposure_time }}s</span
+                                    >
+                                </div>
+                                <div v-if="item.iso" class="flex flex-col">
+                                    <span
+                                        class="text-[9px] tracking-wider text-slate-400 uppercase"
+                                        >ISO</span
+                                    >
+                                    <span
+                                        class="font-mono text-xs font-semibold text-slate-200"
+                                        >{{ item.iso }}</span
+                                    >
+                                </div>
+                                <div
+                                    v-if="item.focal_length"
+                                    class="flex flex-col"
+                                >
+                                    <span
+                                        class="text-[9px] tracking-wider text-slate-400 uppercase"
+                                        >Focal</span
+                                    >
+                                    <span
+                                        class="font-mono text-xs font-semibold text-slate-200"
+                                        >{{ item.focal_length }}mm</span
                                     >
                                 </div>
                             </div>

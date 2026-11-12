@@ -14,6 +14,11 @@ final readonly class ExifData
         public ?float $longitude = null,
         public ?string $cameraMake = null,
         public ?string $cameraModel = null,
+        public ?string $lensModel = null,
+        public ?string $fNumber = null,
+        public ?string $exposureTime = null,
+        public ?int $iso = null,
+        public ?string $focalLength = null,
         public ?int $height = null,
         public ?int $width = null,
     ) {}

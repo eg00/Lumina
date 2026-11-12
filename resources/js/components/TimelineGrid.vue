@@ -21,12 +21,25 @@ export interface MediaItem {
     country?: string | null;
     city?: string | null;
     place_name?: string | null;
+    camera_make?: string | null;
+    camera_model?: string | null;
+    lens_model?: string | null;
+    f_number?: string | number | null;
+    exposure_time?: string | null;
+    iso?: number | null;
+    focal_length?: string | number | null;
     tags?: Array<{ id: number; name: string; slug: string }>;
 }
 
-const props = defineProps<{
-    items: MediaItem[];
-}>();
+const props = withDefaults(
+    defineProps<{
+        items: MediaItem[];
+        groupByDate?: boolean;
+    }>(),
+    {
+        groupByDate: false,
+    },
+);
 
 const emit = defineEmits<{
     (e: 'select', item: MediaItem): void;
@@ -72,34 +85,105 @@ function onImageLoad(uuid: string) {
 
 <template>
     <div class="flex flex-col gap-6 sm:gap-8">
-        <section
-            v-for="group in timelineGroups"
-            :key="group.title"
-            class="flex flex-col gap-2"
-        >
-            <!-- Quiet sticky date header -->
-            <div
-                class="sticky top-0 z-10 flex items-center justify-between bg-background/85 py-2 backdrop-blur-md transition-colors"
+        <!-- Grouped by Date View -->
+        <template v-if="props.groupByDate">
+            <section
+                v-for="group in timelineGroups"
+                :key="group.title"
+                class="flex flex-col gap-2"
             >
-                <h2
-                    class="text-sm font-semibold tracking-tight text-foreground"
+                <!-- Quiet sticky date header -->
+                <div
+                    class="sticky top-0 z-10 flex items-center justify-between bg-background/85 py-2 backdrop-blur-md transition-colors"
                 >
-                    {{ group.title }}
-                </h2>
-                <span
-                    class="text-[11px] font-medium text-muted-foreground/80 tabular-nums"
-                >
-                    {{ group.items.length }}
-                    {{ group.items.length === 1 ? 'item' : 'items' }}
-                </span>
-            </div>
+                    <h2
+                        class="text-sm font-semibold tracking-tight text-foreground"
+                    >
+                        {{ group.title }}
+                    </h2>
+                    <span
+                        class="text-[11px] font-medium text-muted-foreground/80 tabular-nums"
+                    >
+                        {{ group.items.length }}
+                        {{ group.items.length === 1 ? 'item' : 'items' }}
+                    </span>
+                </div>
 
-            <!-- Responsive, dense media grid -->
+                <!-- Responsive, dense media grid -->
+                <div
+                    class="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-1.5 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
+                >
+                    <div
+                        v-for="item in group.items"
+                        :key="item.uuid"
+                        :style="{
+                            backgroundColor:
+                                item.dominant_color || 'transparent',
+                        }"
+                        class="group relative aspect-square cursor-pointer overflow-hidden rounded-sm bg-muted/30 transition-shadow duration-200 select-none hover:ring-1 hover:ring-ring/30 sm:rounded-md"
+                        @click="emit('select', item)"
+                    >
+                        <!-- Subtle shimmer pulse placeholder while image loads -->
+                        <div
+                            v-if="!loadedImages[item.uuid]"
+                            class="absolute inset-0 animate-pulse bg-white/5"
+                        ></div>
+
+                        <img
+                            v-if="item.thumbnail_path"
+                            :src="'/storage/' + item.thumbnail_path"
+                            :alt="item.file_path"
+                            loading="lazy"
+                            class="h-full w-full object-cover transition-all duration-300 ease-out group-hover:scale-[1.04]"
+                            :class="
+                                loadedImages[item.uuid]
+                                    ? 'scale-100 opacity-100'
+                                    : 'scale-[1.02] opacity-0'
+                            "
+                            @load="onImageLoad(item.uuid)"
+                        />
+
+                        <!-- Soft bottom vignette for indicators -->
+                        <div
+                            v-if="
+                                item.media_type === 'video' || item.is_favorite
+                            "
+                            class="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-black/50 to-transparent"
+                        ></div>
+
+                        <!-- Video badge -->
+                        <div
+                            v-if="item.media_type === 'video'"
+                            class="absolute bottom-1.5 left-1.5 flex items-center justify-center rounded-full bg-black/60 p-1 text-white shadow-sm backdrop-blur-md transition-transform group-hover:scale-105"
+                            title="Video"
+                        >
+                            <Play
+                                class="ml-0.5 size-2.5 fill-white stroke-none"
+                            />
+                        </div>
+
+                        <!-- Favorite indicator -->
+                        <div
+                            v-if="item.is_favorite"
+                            class="absolute top-1.5 right-1.5 text-rose-500 drop-shadow-md transition-transform group-hover:scale-110"
+                            title="Favorite"
+                        >
+                            <Heart
+                                class="size-3.5 fill-rose-500 stroke-rose-500"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </template>
+
+        <!-- Continuous Flat Grid View (Default: without date grouping) -->
+        <template v-else>
             <div
                 class="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-1.5 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
             >
                 <div
-                    v-for="item in group.items"
+                    v-for="item in props.items"
                     :key="item.uuid"
                     :style="{
                         backgroundColor: item.dominant_color || 'transparent',
@@ -152,6 +236,6 @@ function onImageLoad(uuid: string) {
                     </div>
                 </div>
             </div>
-        </section>
+        </template>
     </div>
 </template>

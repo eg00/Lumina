@@ -64,6 +64,13 @@ class ProcessMediaFileJob implements ShouldQueue
             'height' => $exif->height ?? $file->height,
             'latitude' => $exif->latitude ?? $file->latitude,
             'longitude' => $exif->longitude ?? $file->longitude,
+            'camera_make' => $exif->cameraMake ?? $file->camera_make,
+            'camera_model' => $exif->cameraModel ?? $file->camera_model,
+            'lens_model' => $exif->lensModel ?? $file->lens_model,
+            'f_number' => $exif->fNumber ?? $file->f_number,
+            'exposure_time' => $exif->exposureTime ?? $file->exposure_time,
+            'iso' => $exif->iso ?? $file->iso,
+            'focal_length' => $exif->focalLength ?? $file->focal_length,
             'captured_at' => $exif->capturedAt ?? $file->captured_at ?? $file->mtime,
         ]);
 

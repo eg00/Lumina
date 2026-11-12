@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
-import { Heart, Image as ImageIcon, Monitor, Moon, Sun, X } from '@lucide/vue';
+import {
+    CalendarDays,
+    Heart,
+    Image as ImageIcon,
+    Monitor,
+    Moon,
+    Sun,
+    X,
+} from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useAppearance } from '@/composables/useAppearance';
 import { subscribeToMercure } from '@/echo';
@@ -41,6 +49,22 @@ const nextPageUrl = ref<string | null>(props.media.next_page_url);
 const isLoadingMore = ref(false);
 const sentinelRef = ref<HTMLElement | null>(null);
 let observer: IntersectionObserver | null = null;
+
+const isGroupedByDate = ref(
+    typeof window !== 'undefined'
+        ? localStorage.getItem('lumina_group_by_date') === '1'
+        : false,
+);
+
+function toggleDateGrouping() {
+    isGroupedByDate.value = !isGroupedByDate.value;
+    if (typeof window !== 'undefined') {
+        localStorage.setItem(
+            'lumina_group_by_date',
+            isGroupedByDate.value ? '1' : '0',
+        );
+    }
+}
 
 watch(
     () => props.media,
@@ -355,6 +379,28 @@ onUnmounted(() => {
                         </svg>
                         Map
                     </Link>
+                    <!-- View Mode Toggle: Flat Grid vs Group by Month -->
+                    <button
+                        type="button"
+                        class="flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all"
+                        :class="
+                            isGroupedByDate
+                                ? 'border-primary/40 bg-primary/10 font-semibold text-primary shadow-xs'
+                                : 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/70 hover:text-foreground'
+                        "
+                        :title="
+                            isGroupedByDate
+                                ? 'Switch to Continuous Grid (Current: By Month)'
+                                : 'Switch to Group by Month (Current: Continuous Grid)'
+                        "
+                        @click="toggleDateGrouping"
+                    >
+                        <CalendarDays class="size-3.5" />
+                        <span class="hidden sm:inline">{{
+                            isGroupedByDate ? 'By Month' : 'Grid'
+                        }}</span>
+                    </button>
+
                     <!-- Favorites Filter Pill -->
                     <button
                         type="button"
@@ -444,6 +490,7 @@ onUnmounted(() => {
             <TimelineGrid
                 v-if="items.length > 0"
                 :items="items"
+                :group-by-date="isGroupedByDate"
                 @select="openViewer"
             />
 
