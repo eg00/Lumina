@@ -36,16 +36,17 @@ test('embed text gracefully returns empty array when ai-worker is unreachable', 
 
 test('generate embedding batch job persists vector into media embeddings', function (): void {
     $mockVector = array_fill(0, 512, 0.01);
+    /** @var MediaFile $file */
+    $file = MediaFile::factory()->create(['preview_path' => 'preview.webp']);
+    $fullPath = Storage::disk('public')->path('preview.webp');
+
     Http::fake([
         'http://ai-worker:8000/embed-images' => Http::response([
             'results' => [
-                'preview.webp' => $mockVector,
+                $fullPath => $mockVector,
             ],
         ], 200),
     ]);
-
-    /** @var MediaFile $file */
-    $file = MediaFile::factory()->create(['preview_path' => 'preview.webp']);
 
     $job = new GenerateEmbeddingBatchJob([$file->id]);
     $job->handle(app(ClipService::class));

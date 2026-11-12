@@ -1,13 +1,6 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
-import {
-    Heart,
-    Image as ImageIcon,
-    Monitor,
-    Moon,
-    Sun,
-    X,
-} from '@lucide/vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
+import { Heart, Image as ImageIcon, Monitor, Moon, Sun, X } from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useAppearance } from '@/composables/useAppearance';
 import { subscribeToMercure } from '@/echo';
@@ -258,24 +251,51 @@ onUnmounted(() => {
 <template>
     <Head title="Gallery" />
 
-    <div class="min-h-screen bg-background text-foreground transition-colors duration-200">
+    <div
+        class="min-h-screen bg-background text-foreground transition-colors duration-200"
+    >
         <!-- Top bar: Natural scroll (non-sticky), minimal chrome, NO logo -->
-        <header class="w-full border-b border-border/50 bg-background/90 transition-colors">
-            <div class="mx-auto flex items-center justify-between gap-3 px-3 py-2.5 sm:px-6">
+        <header
+            class="w-full border-b border-border/50 bg-background/90 transition-colors"
+        >
+            <div
+                class="mx-auto flex items-center justify-between gap-3 px-3 py-2.5 sm:px-6"
+            >
                 <!-- SearchBar takes primary left/center stage -->
-                <div class="flex-1 max-w-md">
+                <div class="max-w-md flex-1">
                     <SearchBar :initial-query="props.searchQuery" />
                 </div>
 
                 <!-- Right Utility Actions -->
                 <div class="flex items-center gap-1.5 sm:gap-2">
+                    <Link
+                        v-if="props.features.geo_map"
+                        href="/map"
+                        class="flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:bg-slate-800 hover:text-white"
+                        title="Open interactive photo map"
+                    >
+                        <svg
+                            class="h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                            />
+                        </svg>
+                        Map
+                    </Link>
                     <!-- Favorites Filter Pill -->
                     <button
                         type="button"
                         class="flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all"
                         :class="
                             isFavoriteFilter
-                                ? 'border-rose-500/40 bg-rose-500/10 text-rose-500 dark:text-rose-400 font-semibold shadow-xs'
+                                ? 'border-rose-500/40 bg-rose-500/10 font-semibold text-rose-500 shadow-xs dark:text-rose-400'
                                 : 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                         "
                         title="Filter by Favorites"
@@ -308,8 +328,14 @@ onUnmounted(() => {
                         :title="themeTitle"
                         @click="cycleTheme"
                     >
-                        <Monitor v-if="appearance === 'system'" class="size-3.5" />
-                        <Sun v-else-if="appearance === 'light'" class="size-3.5" />
+                        <Monitor
+                            v-if="appearance === 'system'"
+                            class="size-3.5"
+                        />
+                        <Sun
+                            v-else-if="appearance === 'light'"
+                            class="size-3.5"
+                        />
                         <Moon v-else class="size-3.5" />
                     </button>
                 </div>
@@ -332,12 +358,16 @@ onUnmounted(() => {
             >
                 <div class="flex items-center gap-1.5 truncate">
                     <span class="text-muted-foreground">Results for</span>
-                    <strong class="font-medium text-foreground">“{{ props.searchQuery }}”</strong>
-                    <span class="text-muted-foreground">({{ items.length }})</span>
+                    <strong class="font-medium text-foreground"
+                        >“{{ props.searchQuery }}”</strong
+                    >
+                    <span class="text-muted-foreground"
+                        >({{ items.length }})</span
+                    >
                 </div>
                 <a
                     href="/"
-                    class="flex items-center gap-1 font-medium hover:underline text-foreground ml-2"
+                    class="ml-2 flex items-center gap-1 font-medium text-foreground hover:underline"
                 >
                     <X class="size-3" />
                     <span>Clear</span>
@@ -356,14 +386,19 @@ onUnmounted(() => {
                 v-else
                 class="flex flex-col items-center justify-center py-24 text-center text-muted-foreground"
             >
-                <div class="mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted/60">
-                    <ImageIcon class="size-6 text-muted-foreground/60 stroke-[1.5]" />
+                <div
+                    class="mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted/60"
+                >
+                    <ImageIcon
+                        class="size-6 stroke-[1.5] text-muted-foreground/60"
+                    />
                 </div>
                 <h3 class="text-sm font-semibold text-foreground">
                     No media found
                 </h3>
-                <p class="mt-1 text-xs text-muted-foreground/80 max-w-sm">
-                    Photos and videos added to your storage library will automatically appear here.
+                <p class="mt-1 max-w-sm text-xs text-muted-foreground/80">
+                    Photos and videos added to your storage library will
+                    automatically appear here.
                 </p>
             </div>
         </main>

@@ -189,14 +189,14 @@ const formattedSize = computed(() => {
     <Teleport to="body">
         <div
             v-if="isOpen && item"
-            class="fixed inset-0 z-50 flex flex-col bg-black/92 backdrop-blur-xl text-white select-none overflow-hidden"
+            class="fixed inset-0 z-50 flex flex-col overflow-hidden bg-black/92 text-white backdrop-blur-xl select-none"
             @mousemove="resetHideTimer"
             @touchstart="handleTouchStart"
             @touchend="handleTouchEnd"
         >
             <!-- Floating Top Quiet Bar -->
             <header
-                class="pointer-events-none fixed inset-x-0 top-0 z-30 flex items-center justify-between p-3 sm:p-5 transition-opacity duration-300"
+                class="pointer-events-none fixed inset-x-0 top-0 z-30 flex items-center justify-between p-3 transition-opacity duration-300 sm:p-5"
                 :class="{
                     'opacity-100': isChromeVisible || showInfo,
                     'opacity-0': !isChromeVisible && !showInfo,
@@ -204,14 +204,16 @@ const formattedSize = computed(() => {
             >
                 <!-- File name capsule -->
                 <div
-                    class="pointer-events-auto flex items-center gap-2 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 backdrop-blur-md shadow-lg"
+                    class="pointer-events-auto flex items-center gap-2 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 shadow-lg backdrop-blur-md"
                 >
-                    <span class="max-w-[180px] sm:max-w-xs truncate text-xs font-medium text-white/90">
+                    <span
+                        class="max-w-[180px] truncate text-xs font-medium text-white/90 sm:max-w-xs"
+                    >
                         {{ fileName }}
                     </span>
                     <span
                         v-if="item.media_type === 'video'"
-                        class="rounded-full bg-white/15 px-1.5 py-0.2 text-[9px] font-semibold tracking-wider text-white uppercase"
+                        class="py-0.2 rounded-full bg-white/15 px-1.5 text-[9px] font-semibold tracking-wider text-white uppercase"
                     >
                         Video
                     </span>
@@ -219,7 +221,7 @@ const formattedSize = computed(() => {
 
                 <!-- Action buttons capsule -->
                 <div
-                    class="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 p-1 backdrop-blur-md shadow-lg"
+                    class="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 p-1 shadow-lg backdrop-blur-md"
                 >
                     <!-- Similar Photos -->
                     <a
@@ -240,7 +242,9 @@ const formattedSize = computed(() => {
                     >
                         <Copy v-if="copied" class="size-3.5 text-emerald-400" />
                         <Share2 v-else class="size-3.5" />
-                        <span class="hidden sm:inline">{{ copied ? 'Copied' : 'Share' }}</span>
+                        <span class="hidden sm:inline">{{
+                            copied ? 'Copied' : 'Share'
+                        }}</span>
                     </button>
 
                     <!-- Info toggle -->
@@ -271,12 +275,14 @@ const formattedSize = computed(() => {
             </header>
 
             <!-- Main Stage -->
-            <div class="relative flex flex-1 items-center justify-center overflow-hidden">
+            <div
+                class="relative flex flex-1 items-center justify-center overflow-hidden"
+            >
                 <!-- Prev Button -->
                 <button
                     v-if="hasPrev"
                     type="button"
-                    class="pointer-events-auto absolute left-3 sm:left-6 z-20 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 shadow-2xl backdrop-blur-md transition-all duration-300 hover:bg-black/70 hover:scale-105 hover:text-white"
+                    class="pointer-events-auto absolute left-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-black/70 hover:text-white sm:left-6 sm:h-12 sm:w-12"
                     :class="{
                         'opacity-100': isChromeVisible || showInfo,
                         'opacity-0': !isChromeVisible && !showInfo,
@@ -284,14 +290,14 @@ const formattedSize = computed(() => {
                     aria-label="Previous (←)"
                     @click.stop="emit('prev')"
                 >
-                    <ChevronLeft class="size-5 sm:size-6 stroke-[2]" />
+                    <ChevronLeft class="size-5 stroke-[2] sm:size-6" />
                 </button>
 
                 <!-- Next Button -->
                 <button
                     v-if="hasNext"
                     type="button"
-                    class="pointer-events-auto absolute right-3 sm:right-6 z-20 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 shadow-2xl backdrop-blur-md transition-all duration-300 hover:bg-black/70 hover:scale-105 hover:text-white"
+                    class="pointer-events-auto absolute right-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 hover:bg-black/70 hover:text-white sm:right-6 sm:h-12 sm:w-12"
                     :class="{
                         'opacity-100': isChromeVisible || showInfo,
                         'opacity-0': !isChromeVisible && !showInfo,
@@ -299,7 +305,7 @@ const formattedSize = computed(() => {
                     aria-label="Next (→)"
                     @click.stop="emit('next')"
                 >
-                    <ChevronRight class="size-5 sm:size-6 stroke-[2]" />
+                    <ChevronRight class="size-5 stroke-[2] sm:size-6" />
                 </button>
 
                 <!-- Media Display with Cinematic Transition -->
@@ -343,7 +349,7 @@ const formattedSize = computed(() => {
                     }"
                 >
                     <div
-                        class="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-black/60 p-1.5 shadow-2xl backdrop-blur-lg max-w-[90vw] sm:max-w-2xl scrollbar-none"
+                        class="pointer-events-auto flex max-w-[90vw] scrollbar-none items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-black/60 p-1.5 shadow-2xl backdrop-blur-lg sm:max-w-2xl"
                     >
                         <button
                             v-for="subItem in props.items.slice(0, 40)"
@@ -352,7 +358,7 @@ const formattedSize = computed(() => {
                             class="relative h-9 w-9 shrink-0 overflow-hidden rounded-md transition-all duration-200"
                             :class="
                                 subItem.id === item.id
-                                    ? 'ring-2 ring-white scale-110 z-10'
+                                    ? 'z-10 scale-110 ring-2 ring-white'
                                     : 'opacity-50 hover:opacity-100'
                             "
                             @click.stop="emit('select', subItem)"
@@ -366,7 +372,10 @@ const formattedSize = computed(() => {
                             <div
                                 v-else
                                 class="h-full w-full"
-                                :style="{ backgroundColor: subItem.dominant_color || '#333' }"
+                                :style="{
+                                    backgroundColor:
+                                        subItem.dominant_color || '#333',
+                                }"
                             ></div>
                         </button>
                     </div>
@@ -375,13 +384,19 @@ const formattedSize = computed(() => {
                 <!-- Right-side Info Drawer (Desktop) & Bottom Sheet (Mobile) -->
                 <aside
                     v-if="showInfo"
-                    class="fixed md:static inset-x-0 bottom-0 z-40 flex max-h-[80vh] md:max-h-full w-full md:w-88 shrink-0 flex-col gap-5 overflow-y-auto rounded-t-3xl md:rounded-none border-t md:border-t-0 md:border-l border-white/10 bg-slate-950/95 p-5 sm:p-6 text-xs text-slate-300 shadow-2xl backdrop-blur-2xl transition-all"
+                    class="fixed inset-x-0 bottom-0 z-40 flex max-h-[80vh] w-full shrink-0 flex-col gap-5 overflow-y-auto rounded-t-3xl border-t border-white/10 bg-slate-950/95 p-5 text-xs text-slate-300 shadow-2xl backdrop-blur-2xl transition-all sm:p-6 md:static md:max-h-full md:w-88 md:rounded-none md:border-t-0 md:border-l"
                 >
                     <!-- Mobile drag handle -->
-                    <div class="mx-auto h-1 w-10 shrink-0 rounded-full bg-white/20 md:hidden"></div>
+                    <div
+                        class="mx-auto h-1 w-10 shrink-0 rounded-full bg-white/20 md:hidden"
+                    ></div>
 
-                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
-                        <h3 class="text-xs font-semibold tracking-wider text-white uppercase">
+                    <div
+                        class="flex items-center justify-between border-b border-white/10 pb-3"
+                    >
+                        <h3
+                            class="text-xs font-semibold tracking-wider text-white uppercase"
+                        >
                             Information
                         </h3>
                         <button
@@ -396,70 +411,123 @@ const formattedSize = computed(() => {
 
                     <!-- File Details Card -->
                     <div class="flex flex-col gap-2">
-                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                        <span
+                            class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase"
+                        >
                             File
                         </span>
-                        <div class="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-white/[0.03] p-3">
-                            <span class="font-medium break-all text-white">{{ fileName }}</span>
-                            <span class="truncate text-[11px] text-slate-400" :title="item.file_path">
+                        <div
+                            class="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-white/[0.03] p-3"
+                        >
+                            <span class="font-medium break-all text-white">{{
+                                fileName
+                            }}</span>
+                            <span
+                                class="truncate text-[11px] text-slate-400"
+                                :title="item.file_path"
+                            >
                                 {{ item.file_path }}
                             </span>
-                            <div class="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
-                                <span v-if="formattedSize">{{ formattedSize }}</span>
-                                <span v-if="item.mime_type">• {{ item.mime_type }}</span>
+                            <div
+                                class="mt-1 flex items-center gap-2 text-[11px] text-slate-400"
+                            >
+                                <span v-if="formattedSize">{{
+                                    formattedSize
+                                }}</span>
+                                <span v-if="item.mime_type"
+                                    >• {{ item.mime_type }}</span
+                                >
                             </div>
                         </div>
                     </div>
 
                     <!-- EXIF / Capture Details Card -->
                     <div class="flex flex-col gap-2">
-                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                        <span
+                            class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase"
+                        >
                             Capture Details
                         </span>
-                        <div class="flex flex-col gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] p-3">
-                            <div v-if="formattedDate" class="flex items-center justify-between">
+                        <div
+                            class="flex flex-col gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] p-3"
+                        >
+                            <div
+                                v-if="formattedDate"
+                                class="flex items-center justify-between"
+                            >
                                 <span class="text-slate-400">Date</span>
-                                <span class="text-white">{{ formattedDate }}</span>
+                                <span class="text-white">{{
+                                    formattedDate
+                                }}</span>
                             </div>
-                            <div v-if="item.width && item.height" class="flex items-center justify-between">
+                            <div
+                                v-if="item.width && item.height"
+                                class="flex items-center justify-between"
+                            >
                                 <span class="text-slate-400">Dimensions</span>
-                                <span class="font-mono text-white">{{ item.width }} × {{ item.height }}</span>
+                                <span class="font-mono text-white"
+                                    >{{ item.width }} × {{ item.height }}</span
+                                >
                             </div>
-                            <div v-if="item.dominant_color" class="flex items-center justify-between">
-                                <span class="text-slate-400">Dominant Color</span>
+                            <div
+                                v-if="item.dominant_color"
+                                class="flex items-center justify-between"
+                            >
+                                <span class="text-slate-400"
+                                    >Dominant Color</span
+                                >
                                 <div class="flex items-center gap-1.5">
                                     <span
                                         class="size-3 rounded-full border border-white/20"
-                                        :style="{ backgroundColor: item.dominant_color }"
+                                        :style="{
+                                            backgroundColor:
+                                                item.dominant_color,
+                                        }"
                                     ></span>
-                                    <span class="font-mono text-white uppercase">{{ item.dominant_color }}</span>
+                                    <span
+                                        class="font-mono text-white uppercase"
+                                        >{{ item.dominant_color }}</span
+                                    >
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Geolocation Card -->
-                    <div v-if="item.place_name || item.latitude" class="flex flex-col gap-2">
-                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                    <div
+                        v-if="item.place_name || item.latitude"
+                        class="flex flex-col gap-2"
+                    >
+                        <span
+                            class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase"
+                        >
                             Location
                         </span>
-                        <div class="flex flex-col gap-2 rounded-xl border border-white/5 bg-white/[0.03] p-3">
-                            <div v-if="item.place_name" class="flex items-center gap-1.5 font-medium text-white">
-                                <MapPin class="size-3.5 text-rose-400 shrink-0" />
+                        <div
+                            class="flex flex-col gap-2 rounded-xl border border-white/5 bg-white/[0.03] p-3"
+                        >
+                            <div
+                                v-if="item.place_name"
+                                class="flex items-center gap-1.5 font-medium text-white"
+                            >
+                                <MapPin
+                                    class="size-3.5 shrink-0 text-rose-400"
+                                />
                                 <span>{{ item.place_name }}</span>
                             </div>
                             <div
                                 v-if="item.latitude && item.longitude"
-                                class="flex items-center justify-between text-[11px] pt-1"
+                                class="flex items-center justify-between pt-1 text-[11px]"
                             >
-                                <span class="text-slate-400 font-mono">
-                                    {{ item.latitude.toFixed(4) }}, {{ item.longitude.toFixed(4) }}
+                                <span class="font-mono text-slate-400">
+                                    {{ item.latitude.toFixed(4) }},
+                                    {{ item.longitude.toFixed(4) }}
                                 </span>
                                 <a
                                     :href="`https://www.google.com/maps?q=${item.latitude},${item.longitude}`"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="text-sky-400 hover:text-sky-300 underline"
+                                    class="text-sky-400 underline hover:text-sky-300"
                                 >
                                     Open map ↗
                                 </a>
@@ -468,8 +536,13 @@ const formattedSize = computed(() => {
                     </div>
 
                     <!-- Tags Card -->
-                    <div v-if="item.tags && item.tags.length > 0" class="flex flex-col gap-2">
-                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                    <div
+                        v-if="item.tags && item.tags.length > 0"
+                        class="flex flex-col gap-2"
+                    >
+                        <span
+                            class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase"
+                        >
                             Tags
                         </span>
                         <div class="flex flex-wrap gap-1.5">
@@ -484,7 +557,9 @@ const formattedSize = computed(() => {
                     </div>
 
                     <!-- Quick Actions -->
-                    <div class="mt-auto flex flex-col gap-2 border-t border-white/10 pt-4">
+                    <div
+                        class="mt-auto flex flex-col gap-2 border-t border-white/10 pt-4"
+                    >
                         <a
                             :href="'/media/' + item.id + '/stream'"
                             target="_blank"
@@ -503,7 +578,9 @@ const formattedSize = computed(() => {
 <style scoped>
 .media-fade-enter-active,
 .media-fade-leave-active {
-    transition: opacity 180ms ease, transform 180ms ease;
+    transition:
+        opacity 180ms ease,
+        transform 180ms ease;
 }
 .media-fade-enter-from {
     opacity: 0;

@@ -113,7 +113,7 @@ onUnmounted(() => {
             ref="inputRef"
             v-model="query"
             type="search"
-            class="h-8 w-full rounded-lg border border-border/60 bg-muted/40 py-1 pr-16 pl-8 text-xs text-foreground placeholder:text-muted-foreground/70 transition-all focus:border-ring focus:bg-background focus:ring-1 focus:ring-ring focus:outline-none"
+            class="h-8 w-full rounded-lg border border-border/60 bg-muted/40 py-1 pr-16 pl-8 text-xs text-foreground transition-all placeholder:text-muted-foreground/70 focus:border-ring focus:bg-background focus:ring-1 focus:ring-ring focus:outline-none"
             :placeholder="placeholder"
             @focus="isFocused = true"
             @blur="isFocused = false"
@@ -121,7 +121,7 @@ onUnmounted(() => {
             @keydown="onKeydown"
         />
 
-        <div class="absolute inset-y-0 right-0 flex items-center pr-2 gap-1">
+        <div class="absolute inset-y-0 right-0 flex items-center gap-1 pr-2">
             <button
                 v-if="query"
                 type="button"
@@ -134,7 +134,7 @@ onUnmounted(() => {
 
             <kbd
                 v-else
-                class="pointer-events-none hidden select-none rounded border border-border/60 bg-background/80 px-1.5 font-mono text-[10px] font-medium text-muted-foreground/80 sm:inline-block"
+                class="pointer-events-none hidden rounded border border-border/60 bg-background/80 px-1.5 font-mono text-[10px] font-medium text-muted-foreground/80 select-none sm:inline-block"
             >
                 ⌘K
             </kbd>

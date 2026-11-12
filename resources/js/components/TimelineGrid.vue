@@ -73,13 +73,18 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
         >
             <!-- Quiet sticky date header -->
             <div
-                class="sticky top-0 z-10 flex items-center justify-between py-2 backdrop-blur-md bg-background/85 transition-colors"
+                class="sticky top-0 z-10 flex items-center justify-between bg-background/85 py-2 backdrop-blur-md transition-colors"
             >
-                <h2 class="text-sm font-semibold tracking-tight text-foreground">
+                <h2
+                    class="text-sm font-semibold tracking-tight text-foreground"
+                >
                     {{ group.title }}
                 </h2>
-                <span class="text-[11px] font-medium text-muted-foreground/80 tabular-nums">
-                    {{ group.items.length }} {{ group.items.length === 1 ? 'item' : 'items' }}
+                <span
+                    class="text-[11px] font-medium text-muted-foreground/80 tabular-nums"
+                >
+                    {{ group.items.length }}
+                    {{ group.items.length === 1 ? 'item' : 'items' }}
                 </span>
             </div>
 
@@ -93,7 +98,7 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
                     :style="{
                         backgroundColor: item.dominant_color || 'transparent',
                     }"
-                    class="group relative aspect-square cursor-pointer overflow-hidden rounded-sm sm:rounded-md bg-muted/30 transition-shadow duration-200 hover:ring-1 hover:ring-ring/30 select-none"
+                    class="group relative aspect-square cursor-pointer overflow-hidden rounded-sm bg-muted/30 transition-shadow duration-200 select-none hover:ring-1 hover:ring-ring/30 sm:rounded-md"
                     @click="emit('select', item)"
                 >
                     <img
@@ -116,13 +121,13 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
                         class="absolute bottom-1.5 left-1.5 flex items-center justify-center rounded-full bg-black/60 p-1 text-white shadow-sm backdrop-blur-md transition-transform group-hover:scale-105"
                         title="Video"
                     >
-                        <Play class="size-2.5 fill-white stroke-none ml-0.5" />
+                        <Play class="ml-0.5 size-2.5 fill-white stroke-none" />
                     </div>
 
                     <!-- Favorite indicator -->
                     <div
                         v-if="item.is_favorite"
-                        class="absolute top-1.5 right-1.5 drop-shadow-md text-rose-500 transition-transform group-hover:scale-110"
+                        class="absolute top-1.5 right-1.5 text-rose-500 drop-shadow-md transition-transform group-hover:scale-110"
                         title="Favorite"
                     >
                         <Heart class="size-3.5 fill-rose-500 stroke-rose-500" />

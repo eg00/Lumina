@@ -46,6 +46,11 @@ export default defineConfig({
                         sizes: '64x64 32x32 24x24 16x16',
                         type: 'image/x-icon',
                     },
+                    {
+                        src: '/apple-touch-icon.png',
+                        sizes: '180x180',
+                        type: 'image/png',
+                    },
                 ],
             },
             workbox: {

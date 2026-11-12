@@ -75,6 +75,10 @@ class ProcessMediaFileJob implements ShouldQueue
             capturedAt: $file->captured_at?->toIso8601String(),
         );
 
+        if ($file->latitude !== null && $file->longitude !== null) {
+            ReverseGeocodeJob::dispatch($file);
+        }
+
         if ($previewPath && Setting::get('features.ai_search', true)) {
             GenerateEmbeddingBatchJob::dispatch([$file->id]);
         }

@@ -14,5 +14,8 @@ parameters:
 
     level: 8
 
+    ignoreErrors:
+        - '#Trait App\\Concerns\\PasswordValidationRules is used zero times#'
+
     parallel:
         maximumNumberOfProcesses: 2
