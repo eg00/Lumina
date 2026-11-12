@@ -21,10 +21,10 @@ class GalleryController extends Controller
         $query = MediaFile::active()->with('tags');
 
         match ($sort) {
-            'captured_at_asc' => $query->oldest('captured_at')->orderBy('id'),
+            'captured_at_asc' => $query->orderByRaw('captured_at ASC NULLS LAST')->orderBy('id'),
             'mtime_desc' => $query->orderByDesc('mtime')->orderByDesc('id'),
             'mtime_asc' => $query->orderBy('mtime')->orderBy('id'),
-            default => $query->latest('captured_at')->orderByDesc('id'),
+            default => $query->orderByRaw('captured_at DESC NULLS LAST')->orderByDesc('id'),
         };
 
         if ($request->boolean('favorite')) {

@@ -90,9 +90,21 @@ INITIAL_MEDIA_PATH=/app/storage/app/public
 ```
 
 ### 3. Start Containers
-Pull pre-built images from GitHub Container Registry (or pass `--build` to compile locally):
+
+#### Production (Pre-built GHCR Images — Recommended)
+Run Lumina using official pre-built multi-arch images without compiling anything:
 ```bash
-docker compose pull
+cp .env.prod.example .env
+# Edit .env and set your secrets and photos folder path
+
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+#### Development (Local Build & Live Code Reload)
+```bash
+cp .env.example .env
+docker compose build
 docker compose up -d
 ```
 

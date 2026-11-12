@@ -30,6 +30,8 @@ RUN install-php-extensions \
 
 # Copy application source code
 COPY . .
+COPY docker/app/Caddyfile /etc/caddy/Caddyfile
+COPY docker/app/Caddyfile /etc/frankenphp/Caddyfile
 
 # Install PHP and JS dependencies
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader

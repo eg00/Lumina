@@ -64,7 +64,7 @@ class ProcessMediaFileJob implements ShouldQueue
             'height' => $exif->height ?? $file->height,
             'latitude' => $exif->latitude ?? $file->latitude,
             'longitude' => $exif->longitude ?? $file->longitude,
-            'captured_at' => $exif->capturedAt ?? $file->captured_at,
+            'captured_at' => $exif->capturedAt ?? $file->captured_at ?? $file->mtime,
         ]);
 
         MediaProcessedEvent::dispatch(

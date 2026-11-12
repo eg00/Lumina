@@ -80,6 +80,11 @@ return [
             'claims' => [
                 'iss' => env('MERCURE_JWT_ISSUER'),
                 'client_id' => env('APP_NAME'),
+                'aud' => array_values(array_unique(array_filter([
+                    env('MERCURE_PUBLIC_URL'),
+                    preg_replace('#^https://#', 'http://', (string) env('MERCURE_PUBLIC_URL')),
+                    env('MERCURE_URL'),
+                ]))),
             ],
             'cookie_name' => env('MERCURE_COOKIE_NAME'),
             'subscribe_expiration' => (int) env('MERCURE_SUBSCRIBE_EXPIRATION', 5),

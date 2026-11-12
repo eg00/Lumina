@@ -20,6 +20,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->timestampsTz();
         });
+        DB::statement('CREATE EXTENSION IF NOT EXISTS vector;');
         DB::statement('ALTER TABLE media_embeddings ADD COLUMN embedding vector(512)');
         DB::statement('CREATE INDEX media_embeddings_hnsw_idx ON media_embeddings USING hnsw (embedding vector_cosine_ops)');
     }

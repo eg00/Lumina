@@ -2,6 +2,8 @@
 set -e
 echo "==> Running database migrations..."
 php artisan migrate --force
+echo "==> Ensuring storage link exists..."
+php artisan storage:link --force || true
 echo "==> Running Lumina initialization (admin, settings, media sources)..."
 php artisan init
 echo "==> Starting FrankenPHP application server..."
