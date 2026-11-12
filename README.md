@@ -25,7 +25,7 @@
 ## ✨ Key Features
 
 - **⚡ Blazing Fast Architecture:** Powered by **FrankenPHP** with **Laravel Octane** keeping the application resident in memory, backed by **Bun**-optimized Vite assets with fast client-side navigation via **Inertia.js v2**.
-- **🧠 Local AI Semantic Search:** Natural language search powered by an on-premise **OpenAI CLIP (ViT-B/32)** worker container. Search for queries like *"sunset over the mountains"*, *"dog playing with ball"*, or *"coffee mug on wooden desk"* without sending your private photos to third-party cloud APIs.
+- **🧠 Local AI Semantic Search:** Natural language search powered by an on-premise **OpenAI CLIP (ViT-B/32)** worker container. Search for queries like _"sunset over the mountains"_, _"dog playing with ball"_, or _"coffee mug on wooden desk"_ without sending your private photos to third-party cloud APIs.
 - **✨ Visual Similarity Search:** Jump from any photo to visually similar images using cosine distance over 512-dimension vector embeddings in **pgvector HNSW** indexes.
 - **🗺️ Interactive Geolocation & Dark Map:** Automatic GPS extraction with resilient ExifTool fallback, reverse geocoding via OpenStreetMap Nominatim (with 30-day Redis caching), and a custom dark Leaflet map view with marker clusters and instant photo previews.
 - **📡 Real-Time Mercure SSE:** Instant scanning and processing progress broadcasted directly to the browser via Server-Sent Events without polling.
@@ -42,12 +42,12 @@
 graph TD
     Client["Browser / Mobile PWA"] -->|HTTPS / WSS| Proxy["Reverse Proxy (Nginx / Traefik)"]
     Proxy -->|HTTP / SSE| App["FrankenPHP Octane Container (Laravel 12 / Inertia / Vue 3)"]
-    
+
     App -->|SQL / HNSW Vector Search| DB[("PostgreSQL 18 + pgvector")]
     App -->|Cache & Queues| Redis[("Redis 7")]
     App -->|Dispatches Jobs| Queue["Queue Worker Container"]
     App -->|Image & Video Storage| Storage[("Local / NAS Volume")]
-    
+
     Queue -->|HTTP /embed-text & /embed-images| AI["FastAPI AI Worker Container (CLIP ViT-B/32)"]
     Queue -->|Reverse Geocoding| Nominatim["OSM Nominatim API (Cached in Redis)"]
     Queue -->|Broadcasts SSE| Mercure["Caddy Mercure Hub (Embedded in FrankenPHP)"]
@@ -59,22 +59,27 @@ graph TD
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Docker Engine 24.0+ and Docker Compose v2.20+
 - At least 2 GB of RAM (4 GB recommended if running the AI CLIP worker)
 
 ### 1. Clone the repository
+
 ```bash
 git clone https://github.com/eg00/Lumina.git
 cd Lumina
 ```
 
 ### 2. Configure Environment
+
 Copy the example environment file:
+
 ```bash
 cp .env.example .env
 ```
 
 Review `.env` and adjust the variables if needed:
+
 ```env
 APP_PORT=8080
 APP_PORT_SSL=8443
@@ -92,7 +97,9 @@ INITIAL_MEDIA_PATH=/app/storage/app/public
 ### 3. Start Containers
 
 #### Production (Pre-built GHCR Images — Recommended)
+
 Run Lumina using official pre-built multi-arch images without compiling anything:
+
 ```bash
 cp .env.prod.example .env
 # Edit .env and set your secrets and photos folder path
@@ -102,6 +109,7 @@ docker compose -f docker-compose.prod.yml up -d
 ```
 
 #### Development (Local Build & Live Code Reload)
+
 ```bash
 cp .env.example .env
 docker compose build
@@ -109,13 +117,17 @@ docker compose up -d
 ```
 
 ### 4. Initialize Lumina
+
 Run the initialization command to create your admin account, apply migrations, and register your default media source:
+
 ```bash
 docker compose exec app php artisan init
 ```
 
 ### 5. Scan Your Photos
+
 Trigger your first media scan:
+
 ```bash
 docker compose exec app php artisan media:scan
 ```
@@ -225,71 +237,71 @@ If you manage your infrastructure with Traefik, add labels directly to the `app`
 
 ```yaml
 services:
-  app:
-    # ... existing app configuration ...
-    labels:
-      - "traefik.enable=true"
-      
-      # HTTP Router (Redirect to HTTPS)
-      - "traefik.http.routers.lumina-http.rule=Host(`gallery.yourdomain.com`)"
-      - "traefik.http.routers.lumina-http.entrypoints=web"
-      - "traefik.http.routers.lumina-http.middlewares=redirect-to-https"
-      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+    app:
+        # ... existing app configuration ...
+        labels:
+            - 'traefik.enable=true'
 
-      # HTTPS Router
-      - "traefik.http.routers.lumina-https.rule=Host(`gallery.yourdomain.com`)"
-      - "traefik.http.routers.lumina-https.entrypoints=websecure"
-      - "traefik.http.routers.lumina-https.tls=true"
-      - "traefik.http.routers.lumina-https.tls.certresolver=letsencrypt"
+            # HTTP Router (Redirect to HTTPS)
+            - 'traefik.http.routers.lumina-http.rule=Host(`gallery.yourdomain.com`)'
+            - 'traefik.http.routers.lumina-http.entrypoints=web'
+            - 'traefik.http.routers.lumina-http.middlewares=redirect-to-https'
+            - 'traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https'
 
-      # Load Balancer & Port
-      - "traefik.http.services.lumina.loadbalancer.server.port=80"
-      
-      # Buffering Middleware (Disabled for Mercure SSE & Streaming)
-      - "traefik.http.routers.lumina-https.middlewares=lumina-compress,lumina-headers"
-      - "traefik.http.middlewares.lumina-compress.compress=true"
-      - "traefik.http.middlewares.lumina-headers.headers.customresponseheaders.X-Robots-Tag=noindex,nofollow,nosnippet,noarchive"
+            # HTTPS Router
+            - 'traefik.http.routers.lumina-https.rule=Host(`gallery.yourdomain.com`)'
+            - 'traefik.http.routers.lumina-https.entrypoints=websecure'
+            - 'traefik.http.routers.lumina-https.tls=true'
+            - 'traefik.http.routers.lumina-https.tls.certresolver=letsencrypt'
+
+            # Load Balancer & Port
+            - 'traefik.http.services.lumina.loadbalancer.server.port=80'
+
+            # Buffering Middleware (Disabled for Mercure SSE & Streaming)
+            - 'traefik.http.routers.lumina-https.middlewares=lumina-compress,lumina-headers'
+            - 'traefik.http.middlewares.lumina-compress.compress=true'
+            - 'traefik.http.middlewares.lumina-headers.headers.customresponseheaders.X-Robots-Tag=noindex,nofollow,nosnippet,noarchive'
 ```
 
 #### Traefik File Provider (`dynamic_conf.yml`):
 
 ```yaml
 http:
-  routers:
-    lumina:
-      rule: "Host(`gallery.yourdomain.com`)"
-      service: lumina-svc
-      entryPoints: ["websecure"]
-      tls:
-        certResolver: letsencrypt
+    routers:
+        lumina:
+            rule: 'Host(`gallery.yourdomain.com`)'
+            service: lumina-svc
+            entryPoints: ['websecure']
+            tls:
+                certResolver: letsencrypt
 
-  services:
-    lumina-svc:
-      loadBalancer:
-        servers:
-          - url: "http://127.0.0.1:8080"
-        responseForwarding:
-          flushInterval: "100ms" # Ensures SSE events flush immediately
+    services:
+        lumina-svc:
+            loadBalancer:
+                servers:
+                    - url: 'http://127.0.0.1:8080'
+                responseForwarding:
+                    flushInterval: '100ms' # Ensures SSE events flush immediately
 ```
 
 ---
 
 ## ⚙️ Configuration & Environment Variables
 
-| Variable | Description | Default |
-| :--- | :--- | :--- |
-| `APP_PORT` | Host HTTP port for FrankenPHP Octane | `8080` |
-| `APP_PORT_SSL` | Host HTTPS port | `8443` |
-| `DB_CONNECTION` | Database driver | `pgsql` |
-| `DB_HOST` | PostgreSQL container host | `db` |
-| `DB_PORT` | PostgreSQL port | `5432` |
-| `DB_DATABASE` | Primary database name | `lumina` |
-| `REDIS_HOST` | Redis container host | `redis` |
+| Variable             | Description                                     | Default                                     |
+| :------------------- | :---------------------------------------------- | :------------------------------------------ |
+| `APP_PORT`           | Host HTTP port for FrankenPHP Octane            | `8080`                                      |
+| `APP_PORT_SSL`       | Host HTTPS port                                 | `8443`                                      |
+| `DB_CONNECTION`      | Database driver                                 | `pgsql`                                     |
+| `DB_HOST`            | PostgreSQL container host                       | `db`                                        |
+| `DB_PORT`            | PostgreSQL port                                 | `5432`                                      |
+| `DB_DATABASE`        | Primary database name                           | `lumina`                                    |
+| `REDIS_HOST`         | Redis container host                            | `redis`                                     |
 | `MERCURE_PUBLIC_URL` | Public Mercure SSE hub URL accessed by browsers | `http://localhost:8080/.well-known/mercure` |
-| `MERCURE_JWT_SECRET` | Secret key used to sign Mercure publish tokens | `random-secret-key` |
-| `ADMIN_EMAIL` | Default administrator email for MoonShine | `admin@example.com` |
-| `ADMIN_PASSWORD` | Default administrator password | *None* |
-| `INITIAL_MEDIA_PATH` | Path inside container to scan for initial media | `/app/storage/app/public` |
+| `MERCURE_JWT_SECRET` | Secret key used to sign Mercure publish tokens  | `random-secret-key`                         |
+| `ADMIN_EMAIL`        | Default administrator email for MoonShine       | `admin@example.com`                         |
+| `ADMIN_PASSWORD`     | Default administrator password                  | _None_                                      |
+| `INITIAL_MEDIA_PATH` | Path inside container to scan for initial media | `/app/storage/app/public`                   |
 
 ---
 
@@ -298,17 +310,18 @@ http:
 Lumina includes an isolated Python FastAPI microservice (`docker/ai-worker`) executing OpenAI's **CLIP ViT-B/32** model.
 
 ### Hardware Sizing
+
 - **Full AI Stack (Recommended):** 4 GB RAM, 2+ CPU cores. Vector embeddings for images and natural language queries are computed locally.
 - **Lightweight Mode:** 1.5 GB RAM. If your server is resource-constrained (e.g. 1 GB VPS or low-power NAS), you can toggle off AI features in the MoonShine Admin Panel (`Settings > Feature Flags > AI Semantic Search: OFF`). The app will smoothly fall back to text and date filtering.
 
 ### Artisan CLI Commands
 
-| Command | Description |
-| :--- | :--- |
-| `php artisan init` | Idempotently creates admin user, default settings, and initial media source. |
-| `php artisan media:scan` | Indexes media sources, generates WebP previews, extracts dominant colors & EXIF. |
-| `php artisan media:scan {source_id}` | Scans a specific storage source by ID. |
-| `php artisan media:reprocess-geo` | Re-extracts GPS via ExifTool and performs Nominatim reverse geocoding for all files. |
+| Command                              | Description                                                                          |
+| :----------------------------------- | :----------------------------------------------------------------------------------- |
+| `php artisan init`                   | Idempotently creates admin user, default settings, and initial media source.         |
+| `php artisan media:scan`             | Indexes media sources, generates WebP previews, extracts dominant colors & EXIF.     |
+| `php artisan media:scan {source_id}` | Scans a specific storage source by ID.                                               |
+| `php artisan media:reprocess-geo`    | Re-extracts GPS via ExifTool and performs Nominatim reverse geocoding for all files. |
 
 ---
 
@@ -351,5 +364,5 @@ bun run build
 
 ## 📄 License
 
-Lumina is open-source software licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. 
+Lumina is open-source software licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**.
 See the [LICENSE](LICENSE) file for more information.

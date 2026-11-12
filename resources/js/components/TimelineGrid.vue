@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Heart, Play } from '@lucide/vue';
-import { computed } from 'vue';
+import { computed, reactive } from 'vue';
 
 export interface MediaItem {
     uuid: string;
@@ -62,6 +62,12 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
         items,
     }));
 });
+
+const loadedImages = reactive<Record<string, boolean>>({});
+
+function onImageLoad(uuid: string) {
+    loadedImages[uuid] = true;
+}
 </script>
 
 <template>
@@ -101,12 +107,24 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
                     class="group relative aspect-square cursor-pointer overflow-hidden rounded-sm bg-muted/30 transition-shadow duration-200 select-none hover:ring-1 hover:ring-ring/30 sm:rounded-md"
                     @click="emit('select', item)"
                 >
+                    <!-- Subtle shimmer pulse placeholder while image loads -->
+                    <div
+                        v-if="!loadedImages[item.uuid]"
+                        class="absolute inset-0 animate-pulse bg-white/5"
+                    ></div>
+
                     <img
                         v-if="item.thumbnail_path"
                         :src="'/storage/' + item.thumbnail_path"
                         :alt="item.file_path"
                         loading="lazy"
-                        class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
+                        class="h-full w-full object-cover transition-all duration-300 ease-out group-hover:scale-[1.04]"
+                        :class="
+                            loadedImages[item.uuid]
+                                ? 'scale-100 opacity-100'
+                                : 'scale-[1.02] opacity-0'
+                        "
+                        @load="onImageLoad(item.uuid)"
                     />
 
                     <!-- Soft bottom vignette for indicators -->

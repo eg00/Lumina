@@ -8,117 +8,121 @@
 # ==============================================================================
 
 services:
-  app:
-    image: ${LUMINA_IMAGE:-ghcr.io/eg00/lumina:latest}
-    restart: unless-stopped
-    entrypoint: ['/app/docker/app/entrypoint.sh']
-    ports:
-      - '${APP_PORT:-8080}:80'
-    environment:
-      APP_BASE_PATH: '/app'
-      APP_ENV: 'production'
-      APP_KEY: '${APP_KEY}'
-      APP_DEBUG: '${APP_DEBUG:-false}'
-      APP_URL: '${APP_URL:-http://localhost:8080}'
-      SERVER_NAME: ':80'
-      FRANKENPHP_CONFIG: 'worker ./vendor/laravel/octane/bin/frankenphp-worker.php'
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DATABASE: '${DB_DATABASE:-lumina}'
-      DB_USERNAME: '${DB_USERNAME:-lumina}'
-      DB_PASSWORD: '${DB_PASSWORD}'
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      QUEUE_CONNECTION: redis
-      BROADCAST_CONNECTION: mercure
-      MERCURE_URL: 'http://app:80/.well-known/mercure'
-      MERCURE_PUBLIC_URL: '${APP_URL:-http://localhost:8080}/.well-known/mercure'
-      MERCURE_JWT_SECRET: '${MERCURE_JWT_SECRET}'
-      AI_WORKER_URL: 'http://ai-worker:8000'
-      ADMIN_EMAIL: '${ADMIN_EMAIL}'
-      ADMIN_PASSWORD: '${ADMIN_PASSWORD}'
-      ADMIN_NAME: '${ADMIN_NAME:-Admin}'
-      INITIAL_MEDIA_PATH: '${INITIAL_MEDIA_PATH:-/photos}'
-      INITIAL_MEDIA_NAME: '${INITIAL_MEDIA_NAME:-Photos}'
-    volumes:
-      - lumina-storage:/app/storage
-      - ${MEDIA_PATH:-./photos}:/photos:ro
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    app:
+        image: ${LUMINA_IMAGE:-ghcr.io/eg00/lumina:latest}
+        restart: unless-stopped
+        entrypoint: ['/app/docker/app/entrypoint.sh']
+        ports:
+            - '${APP_PORT:-8080}:80'
+        environment:
+            APP_BASE_PATH: '/app'
+            APP_ENV: 'production'
+            APP_KEY: '${APP_KEY}'
+            APP_DEBUG: '${APP_DEBUG:-false}'
+            APP_URL: '${APP_URL:-http://localhost:8080}'
+            SERVER_NAME: ':80'
+            FRANKENPHP_CONFIG: 'worker ./vendor/laravel/octane/bin/frankenphp-worker.php'
+            DB_CONNECTION: pgsql
+            DB_HOST: db
+            DB_PORT: 5432
+            DB_DATABASE: '${DB_DATABASE:-lumina}'
+            DB_USERNAME: '${DB_USERNAME:-lumina}'
+            DB_PASSWORD: '${DB_PASSWORD}'
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            QUEUE_CONNECTION: redis
+            BROADCAST_CONNECTION: mercure
+            MERCURE_URL: 'http://app:80/.well-known/mercure'
+            MERCURE_PUBLIC_URL: '${APP_URL:-http://localhost:8080}/.well-known/mercure'
+            MERCURE_JWT_SECRET: '${MERCURE_JWT_SECRET}'
+            AI_WORKER_URL: 'http://ai-worker:8000'
+            ADMIN_EMAIL: '${ADMIN_EMAIL}'
+            ADMIN_PASSWORD: '${ADMIN_PASSWORD}'
+            ADMIN_NAME: '${ADMIN_NAME:-Admin}'
+            INITIAL_MEDIA_PATH: '${INITIAL_MEDIA_PATH:-/photos}'
+            INITIAL_MEDIA_NAME: '${INITIAL_MEDIA_NAME:-Photos}'
+        volumes:
+            - lumina-storage:/app/storage
+            - ${MEDIA_PATH:-./photos}:/photos:ro
+        depends_on:
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
 
-  queue:
-    image: ${LUMINA_IMAGE:-ghcr.io/eg00/lumina:latest}
-    restart: unless-stopped
-    entrypoint: ['docker-php-entrypoint']
-    command: ['php', 'artisan', 'queue:listen', '--tries=3', '--memory=512']
-    environment:
-      APP_BASE_PATH: '/app'
-      APP_ENV: 'production'
-      APP_KEY: '${APP_KEY}'
-      APP_DEBUG: '${APP_DEBUG:-false}'
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_DATABASE: '${DB_DATABASE:-lumina}'
-      DB_USERNAME: '${DB_USERNAME:-lumina}'
-      DB_PASSWORD: '${DB_PASSWORD}'
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      QUEUE_CONNECTION: redis
-      BROADCAST_CONNECTION: mercure
-      MERCURE_URL: 'http://app:80/.well-known/mercure'
-      MERCURE_JWT_SECRET: '${MERCURE_JWT_SECRET}'
-      AI_WORKER_URL: 'http://ai-worker:8000'
-    volumes:
-      - lumina-storage:/app/storage
-      - ${MEDIA_PATH:-./photos}:/photos:ro
-    depends_on:
-      app:
-        condition: service_started
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    queue:
+        image: ${LUMINA_IMAGE:-ghcr.io/eg00/lumina:latest}
+        restart: unless-stopped
+        entrypoint: ['docker-php-entrypoint']
+        command: ['php', 'artisan', 'queue:listen', '--tries=3', '--memory=512']
+        environment:
+            APP_BASE_PATH: '/app'
+            APP_ENV: 'production'
+            APP_KEY: '${APP_KEY}'
+            APP_DEBUG: '${APP_DEBUG:-false}'
+            DB_CONNECTION: pgsql
+            DB_HOST: db
+            DB_PORT: 5432
+            DB_DATABASE: '${DB_DATABASE:-lumina}'
+            DB_USERNAME: '${DB_USERNAME:-lumina}'
+            DB_PASSWORD: '${DB_PASSWORD}'
+            REDIS_HOST: redis
+            REDIS_PORT: 6379
+            QUEUE_CONNECTION: redis
+            BROADCAST_CONNECTION: mercure
+            MERCURE_URL: 'http://app:80/.well-known/mercure'
+            MERCURE_JWT_SECRET: '${MERCURE_JWT_SECRET}'
+            AI_WORKER_URL: 'http://ai-worker:8000'
+        volumes:
+            - lumina-storage:/app/storage
+            - ${MEDIA_PATH:-./photos}:/photos:ro
+        depends_on:
+            app:
+                condition: service_started
+            db:
+                condition: service_healthy
+            redis:
+                condition: service_healthy
 
-  db:
-    image: ${LUMINA_DB_IMAGE:-ghcr.io/eg00/lumina-db:latest}
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: '${DB_DATABASE:-lumina}'
-      POSTGRES_USER: '${DB_USERNAME:-lumina}'
-      POSTGRES_PASSWORD: '${DB_PASSWORD}'
-    volumes:
-      - lumina-db-data:/var/lib/postgresql
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME:-lumina} -d ${DB_DATABASE:-lumina}']
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    db:
+        image: ${LUMINA_DB_IMAGE:-ghcr.io/eg00/lumina-db:latest}
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: '${DB_DATABASE:-lumina}'
+            POSTGRES_USER: '${DB_USERNAME:-lumina}'
+            POSTGRES_PASSWORD: '${DB_PASSWORD}'
+        volumes:
+            - lumina-db-data:/var/lib/postgresql
+        healthcheck:
+            test:
+                [
+                    'CMD-SHELL',
+                    'pg_isready -U ${DB_USERNAME:-lumina} -d ${DB_DATABASE:-lumina}',
+                ]
+            interval: 5s
+            timeout: 5s
+            retries: 5
 
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    volumes:
-      - lumina-redis-data:/data
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 5s
-      timeout: 5s
-      retries: 5
+    redis:
+        image: redis:7-alpine
+        restart: unless-stopped
+        volumes:
+            - lumina-redis-data:/data
+        healthcheck:
+            test: ['CMD', 'redis-cli', 'ping']
+            interval: 5s
+            timeout: 5s
+            retries: 5
 
-  ai-worker:
-    image: ${AI_WORKER_IMAGE:-ghcr.io/eg00/lumina-ai-worker:latest}
-    restart: unless-stopped
-    volumes:
-      - lumina-storage:/app/storage:ro
-    environment:
-      PORT: 8000
+    ai-worker:
+        image: ${AI_WORKER_IMAGE:-ghcr.io/eg00/lumina-ai-worker:latest}
+        restart: unless-stopped
+        volumes:
+            - lumina-storage:/app/storage:ro
+        environment:
+            PORT: 8000
 
 volumes:
-  lumina-storage:
-  lumina-db-data:
-  lumina-redis-data:
+    lumina-storage:
+    lumina-db-data:
+    lumina-redis-data:

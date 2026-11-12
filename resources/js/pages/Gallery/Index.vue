@@ -37,14 +37,59 @@ const props = defineProps<{
 const page = usePage();
 const { appearance, updateAppearance } = useAppearance();
 const items = ref<MediaItem[]>([...props.media.data]);
+const nextPageUrl = ref<string | null>(props.media.next_page_url);
+const isLoadingMore = ref(false);
+const sentinelRef = ref<HTMLElement | null>(null);
+let observer: IntersectionObserver | null = null;
 
 watch(
-    () => props.media.data,
-    (newData) => {
-        items.value = [...newData];
+    () => props.media,
+    (newMedia) => {
+        if (newMedia.current_page === 1) {
+            items.value = [...newMedia.data];
+        }
+        nextPageUrl.value = newMedia.next_page_url;
     },
     { deep: true },
 );
+
+function loadMore() {
+    if (!nextPageUrl.value || isLoadingMore.value) return;
+
+    const currentUrl =
+        typeof window !== 'undefined' ? window.location.href : '/';
+    isLoadingMore.value = true;
+
+    router.get(
+        nextPageUrl.value,
+        {},
+        {
+            preserveState: true,
+            preserveScroll: true,
+            only: ['media'],
+            onSuccess: (page) => {
+                const newPaginatedMedia = page.props.media as PaginatedMedia;
+                const existingUuids = new Set(items.value.map((i) => i.uuid));
+                const newItems = (newPaginatedMedia.data || []).filter(
+                    (i) => !existingUuids.has(i.uuid),
+                );
+                items.value.push(...newItems);
+                nextPageUrl.value = newPaginatedMedia.next_page_url;
+
+                if (typeof window !== 'undefined') {
+                    window.history.replaceState(
+                        window.history.state,
+                        '',
+                        currentUrl,
+                    );
+                }
+            },
+            onFinish: () => {
+                isLoadingMore.value = false;
+            },
+        },
+    );
+}
 
 // Scan progress state
 const scanProgress = ref({
@@ -246,12 +291,25 @@ onMounted(() => {
             }
         },
     });
+
+    if (typeof window !== 'undefined' && sentinelRef.value) {
+        observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0]?.isIntersecting) {
+                    loadMore();
+                }
+            },
+            { rootMargin: '400px' },
+        );
+        observer.observe(sentinelRef.value);
+    }
 });
 
 onUnmounted(() => {
     if (typeof window !== 'undefined') {
         window.removeEventListener('popstate', onPopState);
     }
+    observer?.disconnect();
     eventSource?.close();
 });
 </script>
@@ -388,6 +446,34 @@ onUnmounted(() => {
                 :items="items"
                 @select="openViewer"
             />
+
+            <!-- Infinite Scroll Sentinel & Pre-allocated Skeleton Grid -->
+            <div v-if="items.length > 0" ref="sentinelRef" class="w-full">
+                <!-- Pre-allocated Skeleton Grid while fetching next chunk to eliminate layout shifts -->
+                <div v-if="isLoadingMore" class="mt-6 flex flex-col gap-2">
+                    <div
+                        class="h-4 w-28 animate-pulse rounded bg-muted/40"
+                    ></div>
+                    <div
+                        class="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-1.5 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
+                    >
+                        <div
+                            v-for="n in 14"
+                            :key="'skeleton-' + n"
+                            class="aspect-square animate-pulse rounded-sm bg-muted/40 sm:rounded-md"
+                        ></div>
+                    </div>
+                </div>
+
+                <!-- Quiet End of Gallery Status -->
+                <div
+                    v-else-if="!nextPageUrl && items.length > 0"
+                    class="flex h-16 w-full items-center justify-center py-4 text-xs text-muted-foreground/60"
+                >
+                    All {{ items.length }} items loaded
+                </div>
+                <div v-else class="h-8 w-full"></div>
+            </div>
 
             <!-- Quiet Empty State -->
             <div
