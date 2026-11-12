@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { onUnmounted, ref, watch } from 'vue';
+import { Search, X } from '@lucide/vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = withDefaults(
     defineProps<{
@@ -9,11 +10,13 @@ const props = withDefaults(
     }>(),
     {
         initialQuery: '',
-        placeholder: 'Search photos by description, location or tags...',
+        placeholder: 'Search photos, tags, locations…',
     },
 );
 
 const query = ref(props.initialQuery);
+const inputRef = ref<HTMLInputElement | null>(null);
+const isFocused = ref(false);
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 watch(
@@ -54,13 +57,14 @@ function executeSearch(immediate = false) {
     if (immediate) {
         run();
     } else {
-        debounceTimer = setTimeout(run, 400);
+        debounceTimer = setTimeout(run, 350);
     }
 }
 
 function clearSearch() {
     query.value = '';
     executeSearch(true);
+    inputRef.value?.focus();
 }
 
 function onInput() {
@@ -71,58 +75,69 @@ function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
         e.preventDefault();
         executeSearch(true);
+    } else if (e.key === 'Escape') {
+        inputRef.value?.blur();
     }
 }
 
+function handleGlobalKeydown(e: KeyboardEvent) {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        inputRef.value?.focus();
+        inputRef.value?.select();
+    }
+}
+
+onMounted(() => {
+    window.addEventListener('keydown', handleGlobalKeydown);
+});
+
 onUnmounted(() => {
+    window.removeEventListener('keydown', handleGlobalKeydown);
     if (debounceTimer) {
         clearTimeout(debounceTimer);
     }
 });
 </script>
+
 <template>
-    <div class="relative w-full max-w-md">
+    <div class="relative w-full max-w-sm sm:max-w-md">
         <div
-            class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400"
+            class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-muted-foreground transition-colors"
+            :class="{ 'text-foreground': isFocused }"
         >
-            <svg
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-            >
-                <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-            </svg>
+            <Search class="size-3.5 stroke-[2]" />
         </div>
 
         <input
+            ref="inputRef"
             v-model="query"
             type="search"
-            class="w-full rounded-lg border border-slate-800 bg-slate-900/90 py-1.5 pr-8 pl-9 text-xs text-slate-100 placeholder-slate-500 transition focus:border-indigo-500 focus:bg-slate-900 focus:outline-none"
+            class="h-8 w-full rounded-lg border border-border/60 bg-muted/40 py-1 pr-16 pl-8 text-xs text-foreground placeholder:text-muted-foreground/70 transition-all focus:border-ring focus:bg-background focus:ring-1 focus:ring-ring focus:outline-none"
             :placeholder="placeholder"
+            @focus="isFocused = true"
+            @blur="isFocused = false"
             @input="onInput"
             @keydown="onKeydown"
         />
 
-        <button
-            v-if="query"
-            type="button"
-            class="absolute inset-y-0 right-0 flex items-center pr-2.5 text-slate-400 transition hover:text-white"
-            title="Clear"
-            @click="clearSearch"
-        >
-            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path
-                    fill-rule="evenodd"
-                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                    clip-rule="evenodd"
-                />
-            </svg>
-        </button>
+        <div class="absolute inset-y-0 right-0 flex items-center pr-2 gap-1">
+            <button
+                v-if="query"
+                type="button"
+                class="flex h-5 w-5 items-center justify-center rounded text-muted-foreground transition hover:bg-muted hover:text-foreground"
+                title="Clear (Esc)"
+                @click="clearSearch"
+            >
+                <X class="size-3 stroke-[2.5]" />
+            </button>
+
+            <kbd
+                v-else
+                class="pointer-events-none hidden select-none rounded border border-border/60 bg-background/80 px-1.5 font-mono text-[10px] font-medium text-muted-foreground/80 sm:inline-block"
+            >
+                ⌘K
+            </kbd>
+        </div>
     </div>
 </template>

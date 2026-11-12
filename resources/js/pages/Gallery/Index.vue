@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
+import {
+    Heart,
+    Image as ImageIcon,
+    Monitor,
+    Moon,
+    Sun,
+    X,
+} from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useAppearance } from '@/composables/useAppearance';
 import { subscribeToMercure } from '@/echo';
-import ScanProgressBar from '@/components/ScanProgressBar.vue';
-import TimelineGrid, { type MediaItem } from '@/components/TimelineGrid.vue';
 import MediaViewer from '@/components/MediaViewer.vue';
+import ScanProgressBar from '@/components/ScanProgressBar.vue';
 import SearchBar from '@/components/SearchBar.vue';
+import TimelineGrid, { type MediaItem } from '@/components/TimelineGrid.vue';
 
 interface PaginatedMedia {
     data: MediaItem[];
@@ -33,6 +42,7 @@ const props = defineProps<{
 }>();
 
 const page = usePage();
+const { appearance, updateAppearance } = useAppearance();
 const items = ref<MediaItem[]>([...props.media.data]);
 
 watch(
@@ -161,6 +171,22 @@ function changeSort(e: Event) {
     router.visit(`${pathname}?${params.toString()}`, { preserveState: true });
 }
 
+function cycleTheme() {
+    if (appearance.value === 'system') {
+        updateAppearance('light');
+    } else if (appearance.value === 'light') {
+        updateAppearance('dark');
+    } else {
+        updateAppearance('system');
+    }
+}
+
+const themeTitle = computed(() => {
+    if (appearance.value === 'system') return 'Theme: Auto (System)';
+    if (appearance.value === 'light') return 'Theme: Light';
+    return 'Theme: Dark';
+});
+
 let eventSource: EventSource | null = null;
 
 onMounted(() => {
@@ -230,140 +256,129 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <Head title="Lumina — Gallery" />
+    <Head title="Gallery" />
 
-    <div class="min-h-screen bg-slate-950 text-slate-100">
-        <ScanProgressBar
-            :scanned="scanProgress.scanned"
-            :total="scanProgress.total"
-            :is-completed="scanProgress.isCompleted"
-        />
-
-        <header
-            class="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/80 backdrop-blur"
-        >
-            <div
-                class="mx-auto flex max-w-full items-center justify-between px-4 py-3 sm:px-6"
-            >
-                <div class="flex items-center gap-2.5">
-                    <div
-                        class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-lg"
-                    >
-                        <svg
-                            class="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                            />
-                        </svg>
-                    </div>
-                    <span class="text-xl font-bold tracking-tight text-white"
-                        >Lumina</span
-                    >
+    <div class="min-h-screen bg-background text-foreground transition-colors duration-200">
+        <!-- Top bar: Natural scroll (non-sticky), minimal chrome, NO logo -->
+        <header class="w-full border-b border-border/50 bg-background/90 transition-colors">
+            <div class="mx-auto flex items-center justify-between gap-3 px-3 py-2.5 sm:px-6">
+                <!-- SearchBar takes primary left/center stage -->
+                <div class="flex-1 max-w-md">
+                    <SearchBar :initial-query="props.searchQuery" />
                 </div>
 
-                <SearchBar
-                    :initial-query="props.searchQuery"
-                    class="hidden max-w-md flex-1 sm:block"
-                />
-
-                <div class="flex items-center gap-3">
+                <!-- Right Utility Actions -->
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                    <!-- Favorites Filter Pill -->
                     <button
                         type="button"
-                        class="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition"
+                        class="flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-medium transition-all"
                         :class="
                             isFavoriteFilter
-                                ? 'border-rose-500 bg-rose-500/10 text-rose-400'
-                                : 'border-slate-800 bg-slate-900 text-slate-300 hover:bg-slate-800'
+                                ? 'border-rose-500/40 bg-rose-500/10 text-rose-500 dark:text-rose-400 font-semibold shadow-xs'
+                                : 'border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/70 hover:text-foreground'
                         "
+                        title="Filter by Favorites"
                         @click="toggleFavoriteFilter"
                     >
-                        <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                            <path
-                                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                            />
-                        </svg>
-                        Favorites
+                        <Heart
+                            class="size-3.5"
+                            :class="isFavoriteFilter ? 'fill-current' : ''"
+                        />
+                        <span class="hidden sm:inline">Favorites</span>
                     </button>
 
+                    <!-- Sort Selector -->
                     <select
-                        class="rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-300 transition focus:border-indigo-500 focus:outline-none"
+                        class="h-8 rounded-lg border border-border/60 bg-muted/30 px-2 text-xs text-muted-foreground transition focus:border-ring focus:bg-background focus:text-foreground focus:outline-none"
                         :value="currentSort"
+                        title="Sort media"
                         @change="changeSort"
                     >
                         <option value="captured_at_desc">Newest first</option>
                         <option value="captured_at_asc">Oldest first</option>
-                        <option value="mtime_desc">
-                            Modified date (newest)
-                        </option>
-                        <option value="mtime_asc">
-                            Modified date (oldest)
-                        </option>
+                        <option value="mtime_desc">Modified (newest)</option>
+                        <option value="mtime_asc">Modified (oldest)</option>
                     </select>
+
+                    <!-- Theme Switcher (Auto / Light / Dark) -->
+                    <button
+                        type="button"
+                        class="flex h-8 w-8 items-center justify-center rounded-lg border border-border/60 bg-muted/30 text-muted-foreground transition hover:bg-muted/70 hover:text-foreground"
+                        :title="themeTitle"
+                        @click="cycleTheme"
+                    >
+                        <Monitor v-if="appearance === 'system'" class="size-3.5" />
+                        <Sun v-else-if="appearance === 'light'" class="size-3.5" />
+                        <Moon v-else class="size-3.5" />
+                    </button>
                 </div>
             </div>
+
+            <!-- Integrated Hairline Scan Progress -->
+            <ScanProgressBar
+                :scanned="scanProgress.scanned"
+                :total="scanProgress.total"
+                :is-completed="scanProgress.isCompleted"
+            />
         </header>
 
-        <main class="max-auto mx-auto px-4 py-6 sm:px-6">
+        <!-- Gallery Hero Content -->
+        <main class="w-full px-2 py-4 sm:px-6 sm:py-6">
+            <!-- Active Search Filter Badge -->
             <div
                 v-if="props.searchQuery"
-                class="mb-6 flex items-center justify-between rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-4 py-2.5 text-xs text-indigo-300"
+                class="mb-4 flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-primary"
             >
-                <span>
-                    Showing results for:
-                    <strong class="font-semibold text-white"
-                        >"{{ props.searchQuery }}"</strong
-                    >
-                    ({{ items.length }} found)
-                </span>
-                <a href="/" class="font-medium underline hover:text-white"
-                    >Clear search</a
+                <div class="flex items-center gap-1.5 truncate">
+                    <span class="text-muted-foreground">Results for</span>
+                    <strong class="font-medium text-foreground">“{{ props.searchQuery }}”</strong>
+                    <span class="text-muted-foreground">({{ items.length }})</span>
+                </div>
+                <a
+                    href="/"
+                    class="flex items-center gap-1 font-medium hover:underline text-foreground ml-2"
                 >
+                    <X class="size-3" />
+                    <span>Clear</span>
+                </a>
             </div>
+
+            <!-- Timeline Stream -->
             <TimelineGrid
                 v-if="items.length > 0"
                 :items="items"
                 @select="openViewer"
             />
 
+            <!-- Quiet Empty State -->
             <div
                 v-else
-                class="flex flex-col items-center justify-center py-24 text-center text-slate-400"
+                class="flex flex-col items-center justify-center py-24 text-center text-muted-foreground"
             >
-                <div class="mb-4 rounded-full bg-slate-900 p-4">
-                    <svg
-                        class="h-8 w-8 text-slate-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="1.5"
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                    </svg>
+                <div class="mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted/60">
+                    <ImageIcon class="size-6 text-muted-foreground/60 stroke-[1.5]" />
                 </div>
-                <h3 class="text-base font-semibold text-slate-200">
-                    No media files found
+                <h3 class="text-sm font-semibold text-foreground">
+                    No media found
                 </h3>
+                <p class="mt-1 text-xs text-muted-foreground/80 max-w-sm">
+                    Photos and videos added to your storage library will automatically appear here.
+                </p>
             </div>
         </main>
+
+        <!-- MediaViewer Lightbox with Scrubber -->
         <MediaViewer
             :item="selectedItem"
+            :items="items"
             :is-open="isViewerOpen"
             :has-next="hasNext"
             :has-prev="hasPrev"
             @close="closeViewer"
             @next="nextMedia"
             @prev="prevMedia"
+            @select="openViewer"
         />
     </div>
 </template>

@@ -1,9 +1,22 @@
 <script setup lang="ts">
+import {
+    ChevronLeft,
+    ChevronRight,
+    Copy,
+    Download,
+    Info,
+    MapPin,
+    Play,
+    Share2,
+    Sparkles,
+    X,
+} from '@lucide/vue';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import type { MediaItem } from './TimelineGrid.vue';
 
 const props = defineProps<{
     item: MediaItem | null;
+    items?: MediaItem[];
     isOpen: boolean;
     hasNext?: boolean;
     hasPrev?: boolean;
@@ -13,13 +26,39 @@ const emit = defineEmits<{
     (e: 'close'): void;
     (e: 'next'): void;
     (e: 'prev'): void;
+    (e: 'select', item: MediaItem): void;
 }>();
 
-const showInfo = ref(true);
+const showInfo = ref(false);
 const copied = ref(false);
+const isChromeVisible = ref(true);
+let hideTimer: ReturnType<typeof setTimeout> | null = null;
+
+// Touch tracking
+let touchStartX = 0;
+let touchStartY = 0;
+
+function resetHideTimer() {
+    isChromeVisible.value = true;
+    if (hideTimer) {
+        clearTimeout(hideTimer);
+    }
+    // Don't auto-hide if info panel is open
+    if (!showInfo.value) {
+        hideTimer = setTimeout(() => {
+            isChromeVisible.value = false;
+        }, 2800);
+    }
+}
 
 function toggleInfo() {
     showInfo.value = !showInfo.value;
+    if (showInfo.value) {
+        isChromeVisible.value = true;
+        if (hideTimer) clearTimeout(hideTimer);
+    } else {
+        resetHideTimer();
+    }
 }
 
 async function copyShareUrl() {
@@ -48,10 +87,48 @@ async function copyShareUrl() {
 function handleKeydown(e: KeyboardEvent) {
     if (!props.isOpen) return;
 
-    if (e.key === 'Escape') emit('close');
+    if (e.key === 'Escape') {
+        if (showInfo.value) {
+            showInfo.value = false;
+        } else {
+            emit('close');
+        }
+    }
     if (e.key === 'ArrowRight' && props.hasNext) emit('next');
     if (e.key === 'ArrowLeft' && props.hasPrev) emit('prev');
     if (e.key === 'i' || e.key === 'I') toggleInfo();
+}
+
+function handleTouchStart(e: TouchEvent) {
+    if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        resetHideTimer();
+    }
+}
+
+function handleTouchEnd(e: TouchEvent) {
+    if (e.changedTouches.length === 1) {
+        const deltaX = e.changedTouches[0].clientX - touchStartX;
+        const deltaY = e.changedTouches[0].clientY - touchStartY;
+        const absX = Math.abs(deltaX);
+        const absY = Math.abs(deltaY);
+
+        // Swipe down to dismiss
+        if (deltaY > 90 && absY > absX * 1.5) {
+            emit('close');
+            return;
+        }
+
+        // Horizontal swipe to navigate
+        if (absX > 50 && absX > absY) {
+            if (deltaX < 0 && props.hasNext) {
+                emit('next');
+            } else if (deltaX > 0 && props.hasPrev) {
+                emit('prev');
+            }
+        }
+    }
 }
 
 watch(
@@ -60,9 +137,12 @@ watch(
         if (open) {
             document.body.style.overflow = 'hidden';
             window.addEventListener('keydown', handleKeydown);
+            resetHideTimer();
         } else {
             document.body.style.overflow = '';
             window.removeEventListener('keydown', handleKeydown);
+            if (hideTimer) clearTimeout(hideTimer);
+            showInfo.value = false;
         }
     },
 );
@@ -70,12 +150,14 @@ watch(
 onMounted(() => {
     if (props.isOpen) {
         window.addEventListener('keydown', handleKeydown);
+        resetHideTimer();
     }
 });
 
 onUnmounted(() => {
     document.body.style.overflow = '';
     window.removeEventListener('keydown', handleKeydown);
+    if (hideTimer) clearTimeout(hideTimer);
 });
 
 const formattedDate = computed(() => {
@@ -84,8 +166,8 @@ const formattedDate = computed(() => {
     return isNaN(date.getTime())
         ? ''
         : new Intl.DateTimeFormat('en-US', {
-              dateStyle: 'long',
-              timeStyle: 'medium',
+              dateStyle: 'medium',
+              timeStyle: 'short',
           }).format(date);
 });
 
@@ -98,7 +180,7 @@ const formattedSize = computed(() => {
     if (!props.item?.file_size) return null;
     const mb = props.item.file_size / 1024 / 1024;
     return mb >= 1
-        ? `${mb.toFixed(2)} MB`
+        ? `${mb.toFixed(1)} MB`
         : `${Math.round(props.item.file_size / 1024)} KB`;
 });
 </script>
@@ -107,407 +189,309 @@ const formattedSize = computed(() => {
     <Teleport to="body">
         <div
             v-if="isOpen && item"
-            class="fixed inset-0 z-50 flex flex-col bg-black/95 text-slate-100 backdrop-blur-md"
+            class="fixed inset-0 z-50 flex flex-col bg-black/92 backdrop-blur-xl text-white select-none overflow-hidden"
+            @mousemove="resetHideTimer"
+            @touchstart="handleTouchStart"
+            @touchend="handleTouchEnd"
         >
-            <!-- Top Toolbar -->
+            <!-- Floating Top Quiet Bar -->
             <header
-                class="z-20 flex h-14 shrink-0 items-center justify-between border-b border-slate-800/80 bg-slate-950/80 px-4"
+                class="pointer-events-none fixed inset-x-0 top-0 z-30 flex items-center justify-between p-3 sm:p-5 transition-opacity duration-300"
+                :class="{
+                    'opacity-100': isChromeVisible || showInfo,
+                    'opacity-0': !isChromeVisible && !showInfo,
+                }"
             >
-                <div class="flex items-center gap-3 truncate">
-                    <span class="truncate text-sm font-semibold text-white">{{
-                        fileName
-                    }}</span>
+                <!-- File name capsule -->
+                <div
+                    class="pointer-events-auto flex items-center gap-2 rounded-full border border-white/10 bg-black/50 px-3 py-1.5 backdrop-blur-md shadow-lg"
+                >
+                    <span class="max-w-[180px] sm:max-w-xs truncate text-xs font-medium text-white/90">
+                        {{ fileName }}
+                    </span>
                     <span
                         v-if="item.media_type === 'video'"
-                        class="rounded bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-300"
+                        class="rounded-full bg-white/15 px-1.5 py-0.2 text-[9px] font-semibold tracking-wider text-white uppercase"
                     >
-                        VIDEO
+                        Video
                     </span>
                 </div>
 
-                <div class="flex items-center gap-2">
-                    <!-- Find Similar Button -->
+                <!-- Action buttons capsule -->
+                <div
+                    class="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/10 bg-black/50 p-1 backdrop-blur-md shadow-lg"
+                >
+                    <!-- Similar Photos -->
                     <a
                         :href="'/media/' + item.id + '/similar'"
-                        class="flex items-center gap-1.5 rounded-lg border border-indigo-500/30 bg-indigo-600/20 px-3 py-1.5 text-xs font-medium text-indigo-300 transition hover:bg-indigo-600/30 hover:text-white"
+                        class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
                         title="Find visually similar photos"
                     >
-                        <svg
-                            class="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            />
-                        </svg>
-                        <span>Similar</span>
+                        <Sparkles class="size-3.5" />
+                        <span class="hidden sm:inline">Similar</span>
                     </a>
-                    <!-- Share Button -->
+
+                    <!-- Share -->
                     <button
                         type="button"
-                        class="relative flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800/80 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-slate-700 hover:text-white"
-                        title="Copy photo link"
+                        class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+                        :title="copied ? 'Copied link!' : 'Share photo link'"
                         @click="copyShareUrl"
                     >
-                        <svg
-                            class="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-                            />
-                        </svg>
-                        <span>{{ copied ? 'Copied!' : 'Share' }}</span>
+                        <Copy v-if="copied" class="size-3.5 text-emerald-400" />
+                        <Share2 v-else class="size-3.5" />
+                        <span class="hidden sm:inline">{{ copied ? 'Copied' : 'Share' }}</span>
                     </button>
 
-                    <!-- Info Sidebar Toggle Button -->
+                    <!-- Info toggle -->
                     <button
                         type="button"
-                        class="flex items-center justify-center rounded-lg border p-1.5 text-xs font-medium transition"
+                        class="flex h-7 w-7 items-center justify-center rounded-full transition"
                         :class="
                             showInfo
-                                ? 'border-indigo-500 bg-indigo-600/20 text-indigo-300'
-                                : 'border-slate-700 bg-slate-800/80 text-slate-300 hover:bg-slate-700 hover:text-white'
+                                ? 'bg-white text-black'
+                                : 'text-white/80 hover:bg-white/10 hover:text-white'
                         "
-                        title="File information (I)"
+                        title="Info (I)"
                         @click="toggleInfo"
                     >
-                        <svg
-                            class="h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                        </svg>
+                        <Info class="size-3.5" />
                     </button>
 
-                    <!-- Close Button -->
+                    <!-- Close -->
                     <button
                         type="button"
-                        class="flex items-center justify-center rounded-lg border border-slate-700 bg-slate-800/80 p-1.5 text-slate-300 transition hover:bg-slate-700 hover:text-white"
-                        aria-label="Close (Esc)"
+                        class="flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition hover:bg-white/15 hover:text-white"
+                        title="Close (Esc)"
                         @click="emit('close')"
                     >
-                        <svg
-                            class="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
-                        </svg>
+                        <X class="size-4" />
                     </button>
                 </div>
             </header>
 
-            <!-- Main Content Area: Media Viewport + Optional Right Sidebar -->
-            <div class="relative flex flex-1 overflow-hidden">
-                <!-- Media Viewport -->
-                <div
-                    class="relative flex flex-1 items-center justify-center overflow-hidden p-4"
+            <!-- Main Stage -->
+            <div class="relative flex flex-1 items-center justify-center overflow-hidden">
+                <!-- Prev Button -->
+                <button
+                    v-if="hasPrev"
+                    type="button"
+                    class="pointer-events-auto absolute left-3 sm:left-6 z-20 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 shadow-2xl backdrop-blur-md transition-all duration-300 hover:bg-black/70 hover:scale-105 hover:text-white"
+                    :class="{
+                        'opacity-100': isChromeVisible || showInfo,
+                        'opacity-0': !isChromeVisible && !showInfo,
+                    }"
+                    aria-label="Previous (←)"
+                    @click.stop="emit('prev')"
                 >
-                    <!-- Prev Button -->
-                    <button
-                        v-if="hasPrev"
-                        type="button"
-                        class="absolute left-4 z-20 rounded-full bg-slate-900/80 p-3 text-slate-300 shadow-xl backdrop-blur transition hover:bg-slate-800 hover:text-white"
-                        aria-label="Previous"
-                        @click.stop="emit('prev')"
-                    >
-                        <svg
-                            class="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M15 19l-7-7 7-7"
-                            />
-                        </svg>
-                    </button>
+                    <ChevronLeft class="size-5 sm:size-6 stroke-[2]" />
+                </button>
 
-                    <!-- Next Button -->
-                    <button
-                        v-if="hasNext"
-                        type="button"
-                        class="absolute right-4 z-20 rounded-full bg-slate-900/80 p-3 text-slate-300 shadow-xl backdrop-blur transition hover:bg-slate-800 hover:text-white"
-                        aria-label="Next"
-                        @click.stop="emit('next')"
-                    >
-                        <svg
-                            class="h-6 w-6"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                            />
-                        </svg>
-                    </button>
+                <!-- Next Button -->
+                <button
+                    v-if="hasNext"
+                    type="button"
+                    class="pointer-events-auto absolute right-3 sm:right-6 z-20 flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-white/10 bg-black/40 text-white/80 shadow-2xl backdrop-blur-md transition-all duration-300 hover:bg-black/70 hover:scale-105 hover:text-white"
+                    :class="{
+                        'opacity-100': isChromeVisible || showInfo,
+                        'opacity-0': !isChromeVisible && !showInfo,
+                    }"
+                    aria-label="Next (→)"
+                    @click.stop="emit('next')"
+                >
+                    <ChevronRight class="size-5 sm:size-6 stroke-[2]" />
+                </button>
 
-                    <!-- Video Player -->
-                    <video
-                        v-if="item.media_type === 'video'"
-                        controls
-                        autoplay
-                        playsinline
-                        class="max-h-[82vh] max-w-[95%] rounded-lg shadow-2xl"
-                        :src="'/media/' + item.id + '/stream'"
-                    ></video>
+                <!-- Media Display with Cinematic Transition -->
+                <div
+                    class="relative flex h-full w-full items-center justify-center p-2 sm:p-8"
+                    @click="resetHideTimer"
+                >
+                    <Transition name="media-fade" mode="out-in">
+                        <!-- Video Player -->
+                        <video
+                            v-if="item.media_type === 'video'"
+                            :key="'video-' + item.id"
+                            controls
+                            autoplay
+                            playsinline
+                            class="max-h-[85vh] max-w-[96vw] rounded-lg shadow-2xl outline-none"
+                            :src="'/media/' + item.id + '/stream'"
+                        ></video>
 
-                    <!-- Image Display -->
-                    <img
-                        v-else
-                        :src="
-                            '/storage/' +
-                            (item.preview_path || item.thumbnail_path)
-                        "
-                        :alt="item.file_path"
-                        class="max-h-[82vh] max-w-[95%] rounded-lg object-contain shadow-2xl transition-all"
-                    />
+                        <!-- Image Display -->
+                        <img
+                            v-else
+                            :key="'image-' + item.id"
+                            :src="
+                                '/storage/' +
+                                (item.preview_path || item.thumbnail_path)
+                            "
+                            :alt="item.file_path"
+                            class="max-h-[85vh] max-w-[96vw] rounded-lg object-contain shadow-2xl select-none"
+                        />
+                    </Transition>
                 </div>
 
-                <!-- Right-side Info Sidebar -->
-                <aside
-                    v-if="showInfo"
-                    class="flex w-80 shrink-0 flex-col gap-6 overflow-y-auto border-l border-slate-800 bg-slate-900/95 p-6 text-xs text-slate-300 shadow-2xl backdrop-blur transition-all md:w-96"
+                <!-- Bottom Scrubber Strip (Context miniature carousel) -->
+                <div
+                    v-if="props.items && props.items.length > 1"
+                    class="pointer-events-none fixed inset-x-0 bottom-4 z-20 flex justify-center px-4 transition-opacity duration-300"
+                    :class="{
+                        'opacity-100': isChromeVisible && !showInfo,
+                        'opacity-0': !isChromeVisible || showInfo,
+                    }"
                 >
                     <div
-                        class="flex items-center justify-between border-b border-slate-800 pb-3"
+                        class="pointer-events-auto flex items-center gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-black/60 p-1.5 shadow-2xl backdrop-blur-lg max-w-[90vw] sm:max-w-2xl scrollbar-none"
                     >
-                        <h3
-                            class="text-sm font-semibold tracking-wider text-slate-200 uppercase"
+                        <button
+                            v-for="subItem in props.items.slice(0, 40)"
+                            :key="subItem.id"
+                            type="button"
+                            class="relative h-9 w-9 shrink-0 overflow-hidden rounded-md transition-all duration-200"
+                            :class="
+                                subItem.id === item.id
+                                    ? 'ring-2 ring-white scale-110 z-10'
+                                    : 'opacity-50 hover:opacity-100'
+                            "
+                            @click.stop="emit('select', subItem)"
                         >
+                            <img
+                                v-if="subItem.thumbnail_path"
+                                :src="'/storage/' + subItem.thumbnail_path"
+                                :alt="subItem.file_path"
+                                class="h-full w-full object-cover"
+                            />
+                            <div
+                                v-else
+                                class="h-full w-full"
+                                :style="{ backgroundColor: subItem.dominant_color || '#333' }"
+                            ></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right-side Info Drawer (Desktop) & Bottom Sheet (Mobile) -->
+                <aside
+                    v-if="showInfo"
+                    class="fixed md:static inset-x-0 bottom-0 z-40 flex max-h-[80vh] md:max-h-full w-full md:w-88 shrink-0 flex-col gap-5 overflow-y-auto rounded-t-3xl md:rounded-none border-t md:border-t-0 md:border-l border-white/10 bg-slate-950/95 p-5 sm:p-6 text-xs text-slate-300 shadow-2xl backdrop-blur-2xl transition-all"
+                >
+                    <!-- Mobile drag handle -->
+                    <div class="mx-auto h-1 w-10 shrink-0 rounded-full bg-white/20 md:hidden"></div>
+
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3">
+                        <h3 class="text-xs font-semibold tracking-wider text-white uppercase">
                             Information
                         </h3>
                         <button
                             type="button"
-                            class="text-slate-400 hover:text-white"
-                            title="Hide panel"
+                            class="rounded-full p-1 text-slate-400 transition hover:bg-white/10 hover:text-white"
+                            title="Close info panel (Esc)"
                             @click="showInfo = false"
                         >
-                            <svg
-                                class="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"
-                                />
-                            </svg>
+                            <X class="size-4" />
                         </button>
                     </div>
 
-                    <!-- File Details -->
-                    <div class="flex flex-col gap-2.5">
-                        <span
-                            class="text-[11px] font-semibold tracking-wider text-slate-400 uppercase"
-                            >File</span
-                        >
-                        <div
-                            class="flex flex-col gap-1 rounded-lg border border-slate-800 bg-slate-950/50 p-3"
-                        >
-                            <span class="font-medium break-all text-white">{{
-                                fileName
-                            }}</span>
-                            <span
-                                class="truncate text-[11px] break-all text-slate-400"
-                                :title="item.file_path"
-                                >{{ item.file_path }}</span
-                            >
-                            <div
-                                class="mt-2 flex flex-wrap gap-2 text-[11px] text-slate-400"
-                            >
-                                <span v-if="formattedSize">{{
-                                    formattedSize
-                                }}</span>
-                                <span v-if="item.mime_type"
-                                    >• {{ item.mime_type }}</span
-                                >
+                    <!-- File Details Card -->
+                    <div class="flex flex-col gap-2">
+                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                            File
+                        </span>
+                        <div class="flex flex-col gap-1.5 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                            <span class="font-medium break-all text-white">{{ fileName }}</span>
+                            <span class="truncate text-[11px] text-slate-400" :title="item.file_path">
+                                {{ item.file_path }}
+                            </span>
+                            <div class="mt-1 flex items-center gap-2 text-[11px] text-slate-400">
+                                <span v-if="formattedSize">{{ formattedSize }}</span>
+                                <span v-if="item.mime_type">• {{ item.mime_type }}</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- EXIF / Capture Details -->
-                    <div class="flex flex-col gap-2.5">
-                        <span
-                            class="text-[11px] font-semibold tracking-wider text-slate-400 uppercase"
-                            >Capture Details</span
-                        >
-                        <div
-                            class="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-950/50 p-3"
-                        >
-                            <div
-                                v-if="formattedDate"
-                                class="flex items-center justify-between"
-                            >
+                    <!-- EXIF / Capture Details Card -->
+                    <div class="flex flex-col gap-2">
+                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                            Capture Details
+                        </span>
+                        <div class="flex flex-col gap-2.5 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                            <div v-if="formattedDate" class="flex items-center justify-between">
                                 <span class="text-slate-400">Date</span>
-                                <span class="text-white">{{
-                                    formattedDate
-                                }}</span>
+                                <span class="text-white">{{ formattedDate }}</span>
                             </div>
-                            <div
-                                v-if="item.width && item.height"
-                                class="flex items-center justify-between"
-                            >
-                                <span class="text-slate-400">Resolution</span>
-                                <span class="text-white"
-                                    >{{ item.width }} × {{ item.height }}</span
-                                >
+                            <div v-if="item.width && item.height" class="flex items-center justify-between">
+                                <span class="text-slate-400">Dimensions</span>
+                                <span class="font-mono text-white">{{ item.width }} × {{ item.height }}</span>
                             </div>
-                            <div
-                                v-if="item.dominant_color"
-                                class="flex items-center justify-between"
-                            >
-                                <span class="text-slate-400">Color</span>
+                            <div v-if="item.dominant_color" class="flex items-center justify-between">
+                                <span class="text-slate-400">Dominant Color</span>
                                 <div class="flex items-center gap-1.5">
                                     <span
-                                        class="h-3 w-3 rounded-full"
-                                        :style="{
-                                            backgroundColor:
-                                                item.dominant_color,
-                                        }"
+                                        class="size-3 rounded-full border border-white/20"
+                                        :style="{ backgroundColor: item.dominant_color }"
                                     ></span>
-                                    <span
-                                        class="font-mono text-white uppercase"
-                                        >{{ item.dominant_color }}</span
-                                    >
+                                    <span class="font-mono text-white uppercase">{{ item.dominant_color }}</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Geolocation -->
-                    <div
-                        v-if="item.place_name || item.latitude"
-                        class="flex flex-col gap-2.5"
-                    >
-                        <span
-                            class="text-[11px] font-semibold tracking-wider text-slate-400 uppercase"
-                            >Location</span
-                        >
-                        <div
-                            class="flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-950/50 p-3"
-                        >
-                            <span
-                                v-if="item.place_name"
-                                class="font-medium text-white"
-                                >📍 {{ item.place_name }}</span
-                            >
+                    <!-- Geolocation Card -->
+                    <div v-if="item.place_name || item.latitude" class="flex flex-col gap-2">
+                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                            Location
+                        </span>
+                        <div class="flex flex-col gap-2 rounded-xl border border-white/5 bg-white/[0.03] p-3">
+                            <div v-if="item.place_name" class="flex items-center gap-1.5 font-medium text-white">
+                                <MapPin class="size-3.5 text-rose-400 shrink-0" />
+                                <span>{{ item.place_name }}</span>
+                            </div>
                             <div
                                 v-if="item.latitude && item.longitude"
-                                class="flex items-center justify-between text-[11px]"
+                                class="flex items-center justify-between text-[11px] pt-1"
                             >
-                                <span class="text-slate-400"
-                                    >{{ item.latitude.toFixed(5) }},
-                                    {{ item.longitude.toFixed(5) }}</span
-                                >
+                                <span class="text-slate-400 font-mono">
+                                    {{ item.latitude.toFixed(4) }}, {{ item.longitude.toFixed(4) }}
+                                </span>
                                 <a
                                     :href="`https://www.google.com/maps?q=${item.latitude},${item.longitude}`"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    class="text-indigo-400 underline hover:text-indigo-300"
+                                    class="text-sky-400 hover:text-sky-300 underline"
                                 >
-                                    View on map ↗
+                                    Open map ↗
                                 </a>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Tags -->
-                    <div
-                        v-if="item.tags && item.tags.length > 0"
-                        class="flex flex-col gap-2.5"
-                    >
-                        <span
-                            class="text-[11px] font-semibold tracking-wider text-slate-400 uppercase"
-                            >Tags</span
-                        >
+                    <!-- Tags Card -->
+                    <div v-if="item.tags && item.tags.length > 0" class="flex flex-col gap-2">
+                        <span class="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                            Tags
+                        </span>
                         <div class="flex flex-wrap gap-1.5">
                             <span
                                 v-for="tag in item.tags"
                                 :key="tag.id"
-                                class="rounded-md border border-indigo-500/30 bg-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300"
+                                class="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs text-slate-200"
                             >
                                 #{{ tag.name }}
                             </span>
                         </div>
                     </div>
 
-                    <!-- Actions -->
-                    <div
-                        class="mt-auto flex flex-col gap-2 border-t border-slate-800 pt-4"
-                    >
-                        <a
-                            :href="'/media/' + item.id + '/similar'"
-                            class="flex items-center justify-center gap-2 rounded-lg border border-indigo-500/30 bg-indigo-600/20 py-2 font-medium text-indigo-300 transition hover:bg-indigo-600/30 hover:text-white"
-                        >
-                            <svg
-                                class="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                                />
-                            </svg>
-                            Find Similar
-                        </a>
+                    <!-- Quick Actions -->
+                    <div class="mt-auto flex flex-col gap-2 border-t border-white/10 pt-4">
                         <a
                             :href="'/media/' + item.id + '/stream'"
                             target="_blank"
-                            class="flex items-center justify-center gap-2 rounded-lg bg-slate-800 py-2 font-medium text-slate-200 transition hover:bg-slate-700 hover:text-white"
+                            class="flex items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 font-medium text-white transition hover:bg-white/20"
                         >
-                            <svg
-                                class="h-4 w-4"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                />
-                            </svg>
-                            Open original
+                            <Download class="size-4" />
+                            <span>Download / Original</span>
                         </a>
                     </div>
                 </aside>
@@ -515,3 +499,26 @@ const formattedSize = computed(() => {
         </div>
     </Teleport>
 </template>
+
+<style scoped>
+.media-fade-enter-active,
+.media-fade-leave-active {
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+.media-fade-enter-from {
+    opacity: 0;
+    transform: scale(0.985);
+}
+.media-fade-leave-to {
+    opacity: 0;
+    transform: scale(1.015);
+}
+
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+</style>

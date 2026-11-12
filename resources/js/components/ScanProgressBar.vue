@@ -6,6 +6,7 @@ const props = defineProps<{
     total: number;
     isCompleted?: boolean;
 }>();
+
 const percentage = computed(() => {
     if (!props.total || props.total <= 0) return 0;
     return Math.min(100, Math.round((props.scanned / props.total) * 100));
@@ -15,26 +16,26 @@ const percentage = computed(() => {
 <template>
     <div
         v-if="total > 0 && !isCompleted"
-        class="fixed inset-x-0 top-0 z-40 border-b border-slate-700 bg-slate-900/95 px-4 py-2.5 text-white shadow-lg backdrop-blur"
+        class="w-full transition-all duration-300"
     >
-        <div class="mx-auto flex max-w-7xl flex-col gap-1.5">
+        <!-- Ultra-thin hairline progress bar -->
+        <div class="h-[2px] w-full overflow-hidden bg-muted/40">
             <div
-                class="flex items-center justify-between text-xs font-medium text-slate-300"
-            >
-                <span class="flex items-center gap-2">
-                    <span
-                        class="h-2 w-2 animate-pulse rounded-full bg-indigo-400"
-                    ></span>
-                    Indexing...
+                class="h-full bg-primary transition-all duration-300 ease-out"
+                :style="{ width: `${percentage}%` }"
+            ></div>
+        </div>
+
+        <!-- Quiet status pill container -->
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 text-[11px] text-muted-foreground sm:px-6">
+            <div class="flex items-center gap-2">
+                <span class="relative flex h-2 w-2">
+                    <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/60 opacity-75"></span>
+                    <span class="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
                 </span>
-                <span>{{ scanned }} / {{ total }} ({{ percentage }}%)</span>
+                <span>Indexing media library…</span>
             </div>
-            <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
-                <div
-                    class="h-full rounded-full bg-indigo-500 transition-all duration-300"
-                    :style="{ width: `${percentage}%` }"
-                ></div>
-            </div>
+            <span class="font-mono tabular-nums">{{ scanned }} / {{ total }} ({{ percentage }}%)</span>
         </div>
     </div>
 </template>

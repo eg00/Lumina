@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Heart, Play } from '@lucide/vue';
 import { computed } from 'vue';
 
 export interface MediaItem {
@@ -29,6 +30,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
     (e: 'select', item: MediaItem): void;
+    (e: 'toggleFavorite', item: MediaItem): void;
 }>();
 
 interface TimelineGroup {
@@ -47,7 +49,7 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
                   month: 'long',
                   year: 'numeric',
               }).format(date)
-            : 'No date';
+            : 'Other';
 
         if (!groups.has(title)) {
             groups.set(title, []);
@@ -61,29 +63,37 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
     }));
 });
 </script>
+
 <template>
-    <div class="flex flex-col gap-8">
-        <div
+    <div class="flex flex-col gap-6 sm:gap-8">
+        <section
             v-for="group in timelineGroups"
             :key="group.title"
-            class="flex flex-col gap-3"
+            class="flex flex-col gap-2"
         >
-            <h2
-                class="sticky top-14 z-10 py-2 text-lg font-semibold text-slate-200 capitalize backdrop-blur"
-            >
-                {{ group.title }}
-            </h2>
-
+            <!-- Quiet sticky date header -->
             <div
-                class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6"
+                class="sticky top-0 z-10 flex items-center justify-between py-2 backdrop-blur-md bg-background/85 transition-colors"
+            >
+                <h2 class="text-sm font-semibold tracking-tight text-foreground">
+                    {{ group.title }}
+                </h2>
+                <span class="text-[11px] font-medium text-muted-foreground/80 tabular-nums">
+                    {{ group.items.length }} {{ group.items.length === 1 ? 'item' : 'items' }}
+                </span>
+            </div>
+
+            <!-- Responsive, dense media grid -->
+            <div
+                class="grid grid-cols-3 gap-1 sm:grid-cols-4 sm:gap-1.5 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7"
             >
                 <div
                     v-for="item in group.items"
                     :key="item.id"
                     :style="{
-                        backgroundColor: item.dominant_color || '#1e293b',
+                        backgroundColor: item.dominant_color || 'transparent',
                     }"
-                    class="group relative aspect-square cursor-pointer overflow-hidden rounded-lg"
+                    class="group relative aspect-square cursor-pointer overflow-hidden rounded-sm sm:rounded-md bg-muted/30 transition-shadow duration-200 hover:ring-1 hover:ring-ring/30 select-none"
                     @click="emit('select', item)"
                 >
                     <img
@@ -91,34 +101,34 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
                         :src="'/storage/' + item.thumbnail_path"
                         :alt="item.file_path"
                         loading="lazy"
-                        class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-105"
+                        class="h-full w-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.04]"
                     />
+
+                    <!-- Soft bottom vignette for indicators -->
+                    <div
+                        v-if="item.media_type === 'video' || item.is_favorite"
+                        class="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/50 to-transparent"
+                    ></div>
 
                     <!-- Video badge -->
                     <div
                         v-if="item.media_type === 'video'"
-                        class="absolute bottom-2 left-2 rounded-full bg-black/60 p-1 text-white shadow backdrop-blur"
+                        class="absolute bottom-1.5 left-1.5 flex items-center justify-center rounded-full bg-black/60 p-1 text-white shadow-sm backdrop-blur-md transition-transform group-hover:scale-105"
+                        title="Video"
                     >
-                        <svg
-                            class="h-3.5 w-3.5 fill-current"
-                            viewBox="0 0 24 24"
-                        >
-                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                        </svg>
+                        <Play class="size-2.5 fill-white stroke-none ml-0.5" />
                     </div>
 
+                    <!-- Favorite indicator -->
                     <div
                         v-if="item.is_favorite"
-                        class="absolute top-2 right-2 text-rose-500 drop-shadow"
+                        class="absolute top-1.5 right-1.5 drop-shadow-md text-rose-500 transition-transform group-hover:scale-110"
+                        title="Favorite"
                     >
-                        <svg class="h-4 w-4 fill-current" viewBox="0 0 24 24">
-                            <path
-                                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                            />
-                        </svg>
+                        <Heart class="size-3.5 fill-rose-500 stroke-rose-500" />
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
 </template>
