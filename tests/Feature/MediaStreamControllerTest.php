@@ -23,7 +23,7 @@ test('streaming active media returns binary file response with byte ranges and c
         'is_ignored' => false,
     ]);
 
-    $response = test()->get(route('media.stream', $file->id));
+    $response = test()->get(route('media.stream', $file->uuid));
 
     $response->assertStatus(200)
         ->assertHeader('Content-Type', 'video/mp4')
@@ -41,10 +41,10 @@ test('path traversal or escaping source root returns 403 forbidden', function ()
         'is_ignored' => false,
     ]);
 
-    test()->get(route('media.stream', $file->id))->assertStatus(403);
+    test()->get(route('media.stream', $file->uuid))->assertStatus(403);
 });
 
 test('streaming ignored media returns 404', function (): void {
     $file = MediaFile::factory()->create(['is_ignored' => true]);
-    test()->get(route('media.stream', $file->id))->assertStatus(404);
+    test()->get(route('media.stream', $file->uuid))->assertStatus(404);
 });

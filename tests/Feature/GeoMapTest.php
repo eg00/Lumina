@@ -25,8 +25,8 @@ test('markers endpoint filters by bounding box', function (): void {
 
     $response->assertStatus(200)
         ->assertJsonCount(1)
-        ->assertJsonFragment(['id' => $paris->id])
-        ->assertJsonMissing(['id' => $tokyo->id]);
+        ->assertJsonFragment(['uuid' => $paris->uuid])
+        ->assertJsonMissing(['uuid' => $tokyo->uuid]);
 });
 
 test('map page renders inertia view with features', function (): void {
@@ -39,7 +39,7 @@ test('map page renders inertia view with features', function (): void {
     $response = test()->get('/map');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn (Assert $page) => $page
+    $response->assertInertia(fn (Assert $page): Assert => $page
         ->component('Gallery/Map')
         ->has('features')
     );

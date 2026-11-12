@@ -47,7 +47,7 @@ test('gallery can filter by favorite and tag', function (): void {
     $favResponse->assertInertia(fn (Assert $page): Assert => $page
         ->component('Gallery/Index')
         ->has('media.data', 1)
-        ->where('media.data.0.id', $fav->id)
+        ->where('media.data.0.uuid', $fav->uuid)
     );
 });
 
@@ -64,19 +64,19 @@ test('gallery supports sorting by captured_at_asc', function (): void {
     $response = test()->get('/?sort=captured_at_asc');
     $response->assertInertia(fn (Assert $page): Assert => $page
         ->component('Gallery/Index')
-        ->where('media.data.0.id', $older->id)
+        ->where('media.data.0.uuid', $older->uuid)
     );
 });
 
 test('direct photo view route loads gallery with active media props', function (): void {
     $file = MediaFile::factory()->create(['is_ignored' => false]);
 
-    $response = test()->get("/view/{$file->id}");
+    $response = test()->get("/view/{$file->uuid}");
 
     $response->assertStatus(200);
     $response->assertInertia(fn (Assert $page): Assert => $page
         ->component('Gallery/Index')
-        ->where('activeMediaId', $file->id)
+        ->where('activeMediaId', $file->uuid)
         ->has('activeMediaItem')
     );
 });
@@ -84,7 +84,7 @@ test('direct photo view route loads gallery with active media props', function (
 test('direct photo view route returns 404 for ignored media', function (): void {
     $file = MediaFile::factory()->create(['is_ignored' => true]);
 
-    $response = test()->get("/view/{$file->id}");
+    $response = test()->get("/view/{$file->uuid}");
 
     $response->assertStatus(404);
 });

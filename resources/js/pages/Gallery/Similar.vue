@@ -21,7 +21,9 @@ const isViewerOpen = ref(false);
 
 const currentIndex = computed(() => {
     if (!selectedItem.value) return -1;
-    return props.media.data.findIndex((i) => i.id === selectedItem.value!.id);
+    return props.media.data.findIndex(
+        (i) => i.uuid === selectedItem.value!.uuid,
+    );
 });
 
 const hasNext = computed(

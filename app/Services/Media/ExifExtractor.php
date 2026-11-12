@@ -50,7 +50,7 @@ class ExifExtractor
         // Fallback на ExifTool: если PHP не смог прочитать GPS (из-за Illegal IFD offset или неподдерживаемого формата)
         if ($latitude === null || $longitude === null) {
             $exifToolData = $this->extractViaExifTool($filePath);
-            if ($exifToolData !== null) {
+            if ($exifToolData instanceof ExifData) {
                 $latitude ??= $exifToolData->latitude;
                 $longitude ??= $exifToolData->longitude;
                 $capturedAt ??= $exifToolData->capturedAt;

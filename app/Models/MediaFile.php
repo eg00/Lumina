@@ -8,6 +8,8 @@ use App\Enums\MediaType;
 use Carbon\CarbonImmutable;
 use Database\Factories\MediaFileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\RouteKey;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
@@ -18,9 +20,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * @property int $id
+ * @property string $uuid
  * @property ?int $media_source_id
  * @property string $file_path
  * @property string $storage_disk
@@ -55,6 +59,7 @@ use Illuminate\Support\Carbon;
  * @method static Builder<static>|MediaFile ignored()$tags_count
  */
 #[Fillable([
+    'uuid',
     'media_source_id',
     'file_path',
     'storage_disk',
@@ -78,12 +83,21 @@ use Illuminate\Support\Carbon;
     'preview_path',
     'thumbnail_path',
 ])]
+#[Hidden(['id'])]
+#[RouteKey('uuid')]
 class MediaFile extends Model
 {
     /** @use HasFactory<MediaFileFactory> */
     use HasFactory;
 
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::creating(function (MediaFile $file): void {
+            $file->uuid ??= (string) Str::uuid7();
+        });
+    }
 
     /**
      * @param  Builder<static>  $query

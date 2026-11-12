@@ -17,7 +17,7 @@ class MediaProcessedEvent implements ShouldBroadcast
     use SerializesModels;
 
     public function __construct(
-        public int $mediaFileId,
+        public string $mediaFileUuid,
         public ?string $thumbnailPath = null,
         public ?string $previewPath = null,
         public ?string $dominantColor = null,

@@ -243,3 +243,44 @@ test('artisan media:scan command handles specific source_id argument', function 
     File::delete($filePath);
     rmdir($tempDir);
 });
+
+test('scanner ignores thumbnails and previews subdirectories', function (): void {
+    Queue::fake();
+    Event::fake([MediaScanProgressEvent::class]);
+
+    $tempDir = sys_get_temp_dir().'/test_scan_subdirs_'.uniqid('', true);
+    mkdir($tempDir);
+    mkdir($tempDir.'/thumbnails');
+    mkdir($tempDir.'/previews');
+
+    file_put_contents($tempDir.'/original.jpg', 'fake-original-photo');
+    file_put_contents($tempDir.'/thumbnails/thumb_320.webp', 'fake-thumbnail');
+    file_put_contents($tempDir.'/previews/prev_1280.webp', 'fake-preview');
+
+    $source = MediaSource::query()->create([
+        'name' => 'Subdirs Source',
+        'path' => $tempDir,
+        'is_active' => true,
+    ]);
+
+    $scanner = app(DirectoryScanner::class);
+    $result = $scanner->scan($source);
+
+    expect($result->totalScanned)->toBe(1)
+        ->and($result->newCount)->toBe(1);
+
+    $this->assertDatabaseHas('media_files', [
+        'file_path' => realpath($tempDir.'/original.jpg'),
+        'media_source_id' => $source->id,
+    ]);
+
+    $this->assertDatabaseMissing('media_files', [
+        'file_path' => realpath($tempDir.'/thumbnails/thumb_320.webp'),
+    ]);
+
+    $this->assertDatabaseMissing('media_files', [
+        'file_path' => realpath($tempDir.'/previews/prev_1280.webp'),
+    ]);
+
+    File::deleteDirectory($tempDir);
+});

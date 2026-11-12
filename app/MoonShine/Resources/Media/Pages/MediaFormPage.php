@@ -37,7 +37,7 @@ class MediaFormPage extends FormPage
                 ID::make(),
                 Preview::make('Thumbnail', 'thumbnail_path', static fn (MediaFile $item): string => $item->thumbnail_path ? Storage::disk('public')->url($item->thumbnail_path) : '')->image(),
                 Preview::make('File Path', 'file_path'),
-                Preview::make('Media Type', 'media_type', static fn (MediaFile $item): string => $item->media_type->value)->badge(),
+                Preview::make('Media Type', 'media_type', static fn (MediaFile $item): string => $item->media_type->value ?? '')->badge(),
                 Preview::make('Mime Type', 'mime_type'),
                 Switcher::make('Favorite', 'is_favorite'),
                 Switcher::make('Ignored', 'is_ignored'),

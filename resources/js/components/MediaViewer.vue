@@ -63,7 +63,7 @@ function toggleInfo() {
 
 async function copyShareUrl() {
     if (!props.item) return;
-    const shareUrl = `${window.location.origin}/view/${props.item.id}`;
+    const shareUrl = `${window.location.origin}/view/${props.item.uuid}`;
     try {
         await navigator.clipboard.writeText(shareUrl);
         copied.value = true;
@@ -225,7 +225,7 @@ const formattedSize = computed(() => {
                 >
                     <!-- Similar Photos -->
                     <a
-                        :href="'/media/' + item.id + '/similar'"
+                        :href="'/media/' + item.uuid + '/similar'"
                         class="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
                         title="Find visually similar photos"
                     >
@@ -317,18 +317,18 @@ const formattedSize = computed(() => {
                         <!-- Video Player -->
                         <video
                             v-if="item.media_type === 'video'"
-                            :key="'video-' + item.id"
+                            :key="'video-' + item.uuid"
                             controls
                             autoplay
                             playsinline
                             class="max-h-[85vh] max-w-[96vw] rounded-lg shadow-2xl outline-none"
-                            :src="'/media/' + item.id + '/stream'"
+                            :src="'/media/' + item.uuid + '/stream'"
                         ></video>
 
                         <!-- Image Display -->
                         <img
                             v-else
-                            :key="'image-' + item.id"
+                            :key="'image-' + item.uuid"
                             :src="
                                 '/storage/' +
                                 (item.preview_path || item.thumbnail_path)
@@ -353,11 +353,11 @@ const formattedSize = computed(() => {
                     >
                         <button
                             v-for="subItem in props.items.slice(0, 40)"
-                            :key="subItem.id"
+                            :key="subItem.uuid"
                             type="button"
                             class="relative h-9 w-9 shrink-0 overflow-hidden rounded-md transition-all duration-200"
                             :class="
-                                subItem.id === item.id
+                                subItem.uuid === item.uuid
                                     ? 'z-10 scale-110 ring-2 ring-white'
                                     : 'opacity-50 hover:opacity-100'
                             "
@@ -561,7 +561,7 @@ const formattedSize = computed(() => {
                         class="mt-auto flex flex-col gap-2 border-t border-white/10 pt-4"
                     >
                         <a
-                            :href="'/media/' + item.id + '/stream'"
+                            :href="'/media/' + item.uuid + '/stream'"
                             target="_blank"
                             class="flex items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 font-medium text-white transition hover:bg-white/20"
                         >

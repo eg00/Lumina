@@ -8,7 +8,7 @@ export interface ScanProgressPayload {
 
 export interface MediaProcessedPayload {
     event?: string;
-    mediaFileId: number;
+    mediaFileUuid: string;
     thumbnailPath: string | null;
     previewPath: string | null;
     dominantColor: string | null;

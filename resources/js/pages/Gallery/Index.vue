@@ -29,7 +29,7 @@ const props = defineProps<{
     mercure: {
         hubUrl: string;
     };
-    activeMediaId?: number;
+    activeMediaUuid?: string;
     activeMediaItem?: MediaItem;
     searchQuery?: string;
 }>();
@@ -59,7 +59,7 @@ const isViewerOpen = ref(false);
 
 const currentIndex = computed(() => {
     if (!selectedItem.value) return -1;
-    return items.value.findIndex((i) => i.id === selectedItem.value!.id);
+    return items.value.findIndex((i) => i.uuid === selectedItem.value!.uuid);
 });
 
 const hasNext = computed(
@@ -72,7 +72,11 @@ function openViewer(item: MediaItem, updateUrl = true) {
     selectedItem.value = item;
     isViewerOpen.value = true;
     if (updateUrl && typeof window !== 'undefined') {
-        window.history.pushState({ mediaId: item.id }, '', `/view/${item.id}`);
+        window.history.pushState(
+            { mediaId: item.uuid },
+            '',
+            `/view/${item.uuid}`,
+        );
     }
 }
 
@@ -93,9 +97,9 @@ function nextMedia() {
         selectedItem.value = items.value[currentIndex.value + 1];
         if (typeof window !== 'undefined' && selectedItem.value) {
             window.history.replaceState(
-                { mediaId: selectedItem.value.id },
+                { mediaId: selectedItem.value.uuid },
                 '',
-                `/view/${selectedItem.value.id}`,
+                `/view/${selectedItem.value.uuid}`,
             );
         }
     }
@@ -106,9 +110,9 @@ function prevMedia() {
         selectedItem.value = items.value[currentIndex.value - 1];
         if (typeof window !== 'undefined' && selectedItem.value) {
             window.history.replaceState(
-                { mediaId: selectedItem.value.id },
+                { mediaId: selectedItem.value.uuid },
                 '',
-                `/view/${selectedItem.value.id}`,
+                `/view/${selectedItem.value.uuid}`,
             );
         }
     }
@@ -118,8 +122,8 @@ function onPopState() {
     if (typeof window === 'undefined') return;
     const match = window.location.pathname.match(/\/view\/(\d+)/);
     if (match) {
-        const id = parseInt(match[1], 10);
-        const found = items.value.find((i) => i.id === id);
+        const uuid = match[1];
+        const found = items.value.find((i) => i.uuid === uuid);
         if (found) {
             openViewer(found, false);
         }
@@ -189,7 +193,7 @@ onMounted(() => {
 
     if (props.activeMediaItem) {
         const existing = items.value.find(
-            (i) => i.id === props.activeMediaItem!.id,
+            (i) => i.uuid === props.activeMediaItem!.uuid,
         );
         if (existing) {
             openViewer(existing, false);
@@ -197,8 +201,10 @@ onMounted(() => {
             items.value.unshift(props.activeMediaItem);
             openViewer(props.activeMediaItem, false);
         }
-    } else if (props.activeMediaId) {
-        const existing = items.value.find((i) => i.id === props.activeMediaId);
+    } else if (props.activeMediaUuid) {
+        const existing = items.value.find(
+            (i) => i.uuid === props.activeMediaUuid,
+        );
         if (existing) {
             openViewer(existing, false);
         }
@@ -215,14 +221,16 @@ onMounted(() => {
             };
         },
         onMediaProcessed: (data) => {
-            const idx = items.value.findIndex((i) => i.id === data.mediaFileId);
+            const idx = items.value.findIndex(
+                (i) => i.uuid === data.mediaFileUuid,
+            );
             if (idx !== -1) {
                 items.value[idx].thumbnail_path = data.thumbnailPath;
                 items.value[idx].preview_path = data.previewPath;
                 items.value[idx].dominant_color = data.dominantColor;
             } else {
                 items.value.unshift({
-                    id: data.mediaFileId,
+                    uuid: data.mediaFileUuid,
                     file_path: '',
                     mime_type: 'image/jpeg',
                     media_type: 'image',

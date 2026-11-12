@@ -26,12 +26,19 @@ class DirectoryScanner
         $finder = app(Finder::class);
         $finder->files()
             ->in($source->path)
+            ->exclude(['thumbnails', 'previews', 'cache', '.cache', 'vendor'])
             ->name('/\.(jpg|jpeg|png|webp|heic|avif|gif|tiff|mp4|mov|avi|mkv|webm)$/i');
 
         $total = $finder->count();
 
         foreach ($finder as $file) {
             $filePath = $file->getRealPath();
+            $normalizedPath = str_replace('\\', '/', $filePath);
+
+            if (str_contains($normalizedPath, '/thumbnails/') || str_contains($normalizedPath, '/previews/')) {
+                continue;
+            }
+
             $mtime = CarbonImmutable::createFromTimestamp($file->getMTime());
             $scanned++;
 

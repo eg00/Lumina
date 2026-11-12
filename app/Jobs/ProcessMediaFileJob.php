@@ -68,7 +68,7 @@ class ProcessMediaFileJob implements ShouldQueue
         ]);
 
         MediaProcessedEvent::dispatch(
-            mediaFileId: $file->id,
+            mediaFileUuid: $file->uuid,
             thumbnailPath: $thumbnailPath,
             previewPath: $previewPath,
             dominantColor: $dominantColor,

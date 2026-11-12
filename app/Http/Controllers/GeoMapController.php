@@ -40,14 +40,14 @@ class GeoMapController extends Controller
         if ($request->filled('bounds')) {
             $parts = explode(',', (string) $request->query('bounds'));
             if (count($parts) === 4) {
-                [$minLat, $minLng, $maxLat, $maxLng] = array_map('floatval', $parts);
+                [$minLat, $minLng, $maxLat, $maxLng] = array_map(floatval(...), $parts);
                 $query->whereBetween('latitude', [$minLat, $maxLat])
                     ->whereBetween('longitude', [$minLng, $maxLng]);
             }
         }
 
         $markers = $query->select([
-            'id',
+            'uuid',
             'latitude',
             'longitude',
             'thumbnail_path',
@@ -60,7 +60,7 @@ class GeoMapController extends Controller
             'dominant_color',
             'media_type',
         ])
-            ->orderByDesc('captured_at')
+            ->latest('captured_at')
             ->limit(500)
             ->get();
 

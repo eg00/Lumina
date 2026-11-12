@@ -61,7 +61,7 @@ class GalleryController extends Controller
         }
 
         return $this->index($request)
-            ->with('activeMediaId', $mediaFile->id)
+            ->with('activeMediaId', $mediaFile->uuid)
             ->with('activeMediaItem', $mediaFile->load('tags'));
     }
 }

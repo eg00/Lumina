@@ -29,15 +29,15 @@ test('find similar images orders by vector distance', function (): void {
     MediaEmbedding::query()->create(['media_file_id' => $similar->id, 'embedding' => $vSimilar]);
     MediaEmbedding::query()->create(['media_file_id' => $different->id, 'embedding' => $vDiff]);
 
-    $response = test()->get("/media/{$target->id}/similar");
+    $response = test()->get("/media/{$target->uuid}/similar");
 
     $response->assertStatus(200);
     $response->assertInertia(fn (Assert $page): Assert => $page
         ->component('Gallery/Similar')
         ->has('targetMedia')
         ->has('media.data', 2)
-        ->where('media.data.0.id', $similar->id)
-        ->where('media.data.1.id', $different->id)
+        ->where('media.data.0.uuid', $similar->uuid)
+        ->where('media.data.1.uuid', $different->uuid)
     );
 });
 

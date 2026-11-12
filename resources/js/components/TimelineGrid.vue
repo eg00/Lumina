@@ -3,7 +3,7 @@ import { Heart, Play } from '@lucide/vue';
 import { computed } from 'vue';
 
 export interface MediaItem {
-    id: number;
+    uuid: string;
     file_path: string;
     mime_type: string;
     media_type: 'image' | 'video';
@@ -94,7 +94,7 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
             >
                 <div
                     v-for="item in group.items"
-                    :key="item.id"
+                    :key="item.uuid"
                     :style="{
                         backgroundColor: item.dominant_color || 'transparent',
                     }"
@@ -112,7 +112,7 @@ const timelineGroups = computed<TimelineGroup[]>(() => {
                     <!-- Soft bottom vignette for indicators -->
                     <div
                         v-if="item.media_type === 'video' || item.is_favorite"
-                        class="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-black/50 to-transparent"
+                        class="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-linear-to-t from-black/50 to-transparent"
                     ></div>
 
                     <!-- Video badge -->

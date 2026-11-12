@@ -43,7 +43,7 @@ test('processing job generates webp thumbnails, extracts dominant color and broa
     Storage::disk('public')->assertExists((string) $mediaFile->thumbnail_path);
     Storage::disk('public')->assertExists((string) $mediaFile->preview_path);
 
-    Event::assertDispatched(MediaProcessedEvent::class, fn (MediaProcessedEvent $event): bool => $event->mediaFileId === $mediaFile->id);
+    Event::assertDispatched(MediaProcessedEvent::class, fn (MediaProcessedEvent $event): bool => $event->mediaFileUuid === $mediaFile->uuid);
 });
 
 test('processing job extracts poster and generates webp thumbnails for video', function (): void {
