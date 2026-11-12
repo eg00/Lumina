@@ -64,8 +64,8 @@ graph TD
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/povshok/lumina.git
-cd lumina
+git clone https://github.com/eg00/Lumina.git
+cd Lumina
 ```
 
 ### 2. Configure Environment
@@ -90,8 +90,10 @@ INITIAL_MEDIA_PATH=/app/storage/app/public
 ```
 
 ### 3. Start Containers
+Pull pre-built images from GitHub Container Registry (or pass `--build` to compile locally):
 ```bash
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 ### 4. Initialize Lumina
