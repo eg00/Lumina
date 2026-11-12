@@ -42,15 +42,15 @@ class ProcessMediaFileJob implements ShouldQueue
         $filePath = $file->file_path;
         $hash = $file->file_hash;
 
+        $exif = $exifExtractor->extract($filePath);
+
         if ($file->media_type->isVideo()) {
             $imageSource = $previewGenerator->extractVideoPoster($filePath);
             $dominantColor = $previewGenerator->extractDominantColor($imageSource);
             $thumbnailPath = $previewGenerator->generateWebp($imageSource, "thumbnails/{$hash}_320.webp", 320);
             $previewPath = $previewGenerator->generateWebp($imageSource, "previews/{$hash}_1280.webp", 1280);
             File::delete($imageSource);
-            $exif = null;
         } else {
-            $exif = $exifExtractor->extract($filePath);
             $dominantColor = $previewGenerator->extractDominantColor($filePath);
             $thumbnailPath = $previewGenerator->generateWebp($filePath, "thumbnails/{$hash}_320.webp", 320);
             $previewPath = $previewGenerator->generateWebp($filePath, "previews/{$hash}_1280.webp", 1280);

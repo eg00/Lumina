@@ -24,6 +24,8 @@ class PreviewGenerator
             throw new RuntimeException("Unable to read image from $sourcePath");
         }
 
+        $image = $this->autoOrient($image, $sourcePath);
+
         $origWidth = imagesx($image);
         $origHeight = imagesy($image);
         if ($origWidth > $maxWidth) {
@@ -91,5 +93,54 @@ class PreviewGenerator
         }
 
         return $tempJpg;
+    }
+
+    private function autoOrient(\GdImage $image, string $sourcePath): \GdImage
+    {
+        $exif = @exif_read_data($sourcePath);
+        $orientation = $exif['Orientation'] ?? $exif['IFD0']['Orientation'] ?? 1;
+
+        switch ((int) $orientation) {
+            case 2:
+                imageflip($image, IMG_FLIP_HORIZONTAL);
+                break;
+            case 3:
+                $rotated = imagerotate($image, 180, 0);
+                if ($rotated !== false) {
+                    $image = $rotated;
+                }
+                break;
+            case 4:
+                imageflip($image, IMG_FLIP_VERTICAL);
+                break;
+            case 5:
+                $rotated = imagerotate($image, -90, 0);
+                if ($rotated !== false) {
+                    $image = $rotated;
+                    imageflip($image, IMG_FLIP_HORIZONTAL);
+                }
+                break;
+            case 6:
+                $rotated = imagerotate($image, -90, 0);
+                if ($rotated !== false) {
+                    $image = $rotated;
+                }
+                break;
+            case 7:
+                $rotated = imagerotate($image, 90, 0);
+                if ($rotated !== false) {
+                    $image = $rotated;
+                    imageflip($image, IMG_FLIP_HORIZONTAL);
+                }
+                break;
+            case 8:
+                $rotated = imagerotate($image, 90, 0);
+                if ($rotated !== false) {
+                    $image = $rotated;
+                }
+                break;
+        }
+
+        return $image;
     }
 }

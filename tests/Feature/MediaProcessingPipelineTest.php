@@ -67,7 +67,9 @@ test('processing job extracts poster and generates webp thumbnails for video', f
 
     expect($mediaFile->thumbnail_path)->not->toBeNull()
         ->and($mediaFile->preview_path)->not->toBeNull()
-        ->and($mediaFile->dominant_color)->toMatch('/^#[0-9a-fA-F]{6}$/');
+        ->and($mediaFile->dominant_color)->toMatch('/^#[0-9a-fA-F]{6}$/')
+        ->and($mediaFile->width)->toBe(320)
+        ->and($mediaFile->height)->toBe(240);
 
     Storage::disk('public')->assertExists((string) $mediaFile->thumbnail_path);
     Storage::disk('public')->assertExists((string) $mediaFile->preview_path);
