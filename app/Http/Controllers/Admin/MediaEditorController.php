@@ -100,7 +100,7 @@ class MediaEditorController extends Controller
         if (! $response->successful()) {
             return response()->json([
                 'error' => 'Failed to generate bokeh preview: '.$response->body(),
-            ], 502);
+            ], 422);
         }
 
         $base64 = base64_encode($response->body());

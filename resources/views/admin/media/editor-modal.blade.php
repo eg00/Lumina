@@ -238,16 +238,16 @@ if (window.Alpine) {
 })" x-init="initEditor()" class="flex flex-col gap-3.5 w-full text-sm text-slate-800 dark:text-slate-100">
 
     <!-- Toolbar -->
-    <div class="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-lg">
+    <div class="flex flex-wrap items-center justify-between gap-2 p-2 bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 rounded-lg">
         <!-- Rotation & Reset -->
         <div class="flex items-center gap-1">
-            <button type="button" @click="rotate(-90)" class="px-2.5 py-1.5 bg-white dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded text-xs font-semibold shadow-xs transition cursor-pointer" title="Rotate counter-clockwise (-90°)">
+            <button type="button" @click="rotate(-90)" class="btn !py-1 !px-2.5 !text-xs cursor-pointer" title="Rotate counter-clockwise (-90°)">
                 ↺ -90°
             </button>
-            <button type="button" @click="rotate(90)" class="px-2.5 py-1.5 bg-white dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded text-xs font-semibold shadow-xs transition cursor-pointer" title="Rotate clockwise (+90°)">
+            <button type="button" @click="rotate(90)" class="btn !py-1 !px-2.5 !text-xs cursor-pointer" title="Rotate clockwise (+90°)">
                 ↻ +90°
             </button>
-            <button type="button" @click="reset()" class="px-2.5 py-1.5 bg-white dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded text-xs font-semibold shadow-xs transition cursor-pointer" title="Reset all changes">
+            <button type="button" @click="reset()" class="btn !py-1 !px-2.5 !text-xs cursor-pointer" title="Reset all changes">
                 Reset
             </button>
         </div>
@@ -255,16 +255,16 @@ if (window.Alpine) {
         <!-- Aspect Ratio -->
         <div class="flex items-center gap-1">
             <span class="text-xs text-slate-500 dark:text-slate-400 font-medium mr-1">Aspect Ratio:</span>
-            <button type="button" @click="setAspectRatio(NaN, 'free')" :class="aspectRatioKey === 'free' ? 'bg-primary text-white shadow-xs' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'" class="px-2 py-1 rounded text-xs font-semibold shadow-xs transition cursor-pointer">
+            <button type="button" @click="setAspectRatio(NaN, 'free')" :class="aspectRatioKey === 'free' ? 'btn-primary' : ''" class="btn !py-1 !px-2.5 !text-xs cursor-pointer">
                 Free
             </button>
-            <button type="button" @click="setAspectRatio(1, '1:1')" :class="aspectRatioKey === '1:1' ? 'bg-primary text-white shadow-xs' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'" class="px-2 py-1 rounded text-xs font-semibold shadow-xs transition cursor-pointer">
+            <button type="button" @click="setAspectRatio(1, '1:1')" :class="aspectRatioKey === '1:1' ? 'btn-primary' : ''" class="btn !py-1 !px-2.5 !text-xs cursor-pointer">
                 1:1
             </button>
-            <button type="button" @click="setAspectRatio(4/3, '4:3')" :class="aspectRatioKey === '4:3' ? 'bg-primary text-white shadow-xs' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'" class="px-2 py-1 rounded text-xs font-semibold shadow-xs transition cursor-pointer">
+            <button type="button" @click="setAspectRatio(4/3, '4:3')" :class="aspectRatioKey === '4:3' ? 'btn-primary' : ''" class="btn !py-1 !px-2.5 !text-xs cursor-pointer">
                 4:3
             </button>
-            <button type="button" @click="setAspectRatio(16/9, '16:9')" :class="aspectRatioKey === '16:9' ? 'bg-primary text-white shadow-xs' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600'" class="px-2 py-1 rounded text-xs font-semibold shadow-xs transition cursor-pointer">
+            <button type="button" @click="setAspectRatio(16/9, '16:9')" :class="aspectRatioKey === '16:9' ? 'btn-primary' : ''" class="btn !py-1 !px-2.5 !text-xs cursor-pointer">
                 16:9
             </button>
         </div>
@@ -286,7 +286,7 @@ if (window.Alpine) {
         </div>
 
         <div x-show="portraitMode">
-            <button type="button" @click="previewBokeh()" :disabled="isLoadingBokeh" class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-semibold shadow-xs disabled:opacity-50 transition cursor-pointer">
+            <button type="button" @click="previewBokeh()" :disabled="isLoadingBokeh" class="btn btn-primary !py-1 !px-3 !text-xs cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50">
                 <svg x-show="isLoadingBokeh" width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; display: inline-block;" class="animate-spin -ml-1 mr-1 text-white" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -320,10 +320,10 @@ if (window.Alpine) {
         </span>
 
         <div class="flex items-center gap-2">
-            <button type="button" @click="$dispatch('modal-close')" class="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition cursor-pointer">
+            <button type="button" @click="$dispatch('modal-close')" class="btn !py-1.5 !px-3 !text-xs cursor-pointer">
                 Cancel
             </button>
-            <button type="button" @click="save()" :disabled="isSaving" class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold shadow-xs disabled:opacity-50 transition cursor-pointer">
+            <button type="button" @click="save()" :disabled="isSaving" class="btn btn-success !py-1.5 !px-4 !text-xs cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50">
                 <svg x-show="isSaving" width="16" height="16" style="width: 16px; height: 16px; min-width: 16px; min-height: 16px; display: inline-block;" class="animate-spin -ml-1 mr-1 text-white" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
