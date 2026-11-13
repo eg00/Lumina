@@ -32,6 +32,8 @@ class MediaStreamController extends Controller
         $headers = [
             'Content-Type' => $mediaFile->mime_type,
             'Accept-Ranges' => 'bytes',
+            'Cache-Control' => 'no-cache, private, must-revalidate',
+            'ETag' => '"'.$mediaFile->file_hash.'"',
         ];
 
         return response()->file($realFilePath, $headers);

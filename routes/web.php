@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Admin\MediaEditorController;
 use App\Http\Controllers\AiSearchController;
 use App\Http\Controllers\GalleryController;
 use App\Http\Controllers\GeoMapController;
@@ -21,3 +22,8 @@ Route::get('/media/{mediaFile:uuid}/stream', [MediaStreamController::class, 'str
     ->name('media.stream');
 Route::get('/map', [GeoMapController::class, 'index'])->name('gallery.map');
 Route::get('/api/geo/markers', [GeoMapController::class, 'markers'])->name('api.geo.markers');
+
+Route::middleware(['web', 'auth:moonshine'])->prefix('admin/media/{mediaFile:id}')->group(function (): void {
+    Route::post('apply-edit', [MediaEditorController::class, 'applyEdit'])->name('admin.media.apply-edit');
+    Route::post('preview-bokeh', [MediaEditorController::class, 'previewBokeh'])->name('admin.media.preview-bokeh');
+});

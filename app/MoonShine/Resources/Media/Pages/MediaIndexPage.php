@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\Media\Pages;
 
+use App\Models\MediaFile;
 use App\MoonShine\Resources\Media\MediaResource;
+use Illuminate\Support\Facades\Storage;
 use MoonShine\Contracts\UI\ActionButtonContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
+use MoonShine\Contracts\UI\ModalContract;
 use MoonShine\Laravel\Pages\Crud\IndexPage;
 use MoonShine\Laravel\QueryTags\QueryTag;
 use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\ActionButton;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\ID;
-use MoonShine\UI\Fields\Image;
+use MoonShine\UI\Fields\Preview;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
@@ -34,7 +38,7 @@ class MediaIndexPage extends IndexPage
     {
         return [
             ID::make()->sortable(),
-            Image::make('Thumbnail', 'thumbnail_path')->disk('public'),
+            Preview::make('Thumbnail', 'thumbnail_path', static fn (MediaFile $item): string => $item->thumbnail_path ? '<a href="'.route('media.stream', ['mediaFile' => $item->uuid]).'?v='.$item->updated_at?->timestamp.'" target="_blank" class="inline-block" title="Open Original"><img src="'.Storage::disk('public')->url($item->thumbnail_path).'?v='.$item->updated_at?->timestamp.'" class="h-44 w-auto rounded-lg object-contain border border-slate-200 dark:border-slate-700 bg-slate-900/5 dark:bg-slate-900/40 p-1 hover:opacity-90 transition shadow-sm" alt="Thumbnail" /></a>' : '-'),
             Text::make('File Path', 'file_path'),
             Text::make('Dominant Color', 'dominant_color'),
             Text::make('Captured At', 'captured_at'),
@@ -49,7 +53,17 @@ class MediaIndexPage extends IndexPage
      */
     protected function buttons(): ListOf
     {
-        return parent::buttons();
+        return parent::buttons()->add(
+            ActionButton::make('Edit Photo')
+                ->icon('pencil-square')
+                ->canSee(static fn (?MediaFile $item): bool => $item instanceof MediaFile && in_array($item->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true))
+                ->inModal(
+                    title: 'Image Editor',
+                    content: static fn (MediaFile $item): string => (string) view('admin.media.editor-modal', ['media' => $item]),
+                    name: static fn (MediaFile $item): string => 'media-editor-index-'.$item->id,
+                    builder: static fn (ModalContract $modal, ActionButtonContract $ctx): ModalContract => $modal->wide()
+                )
+        );
     }
 
     /**

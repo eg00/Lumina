@@ -651,7 +651,12 @@ const hasShootingData = computed(() => {
                         class="mt-auto flex flex-col gap-2 border-t border-white/10 pt-4"
                     >
                         <a
-                            :href="'/media/' + item.uuid + '/stream'"
+                            :href="
+                                '/media/' +
+                                item.uuid +
+                                '/stream?v=' +
+                                encodeURIComponent(item.mtime || '')
+                            "
                             target="_blank"
                             class="flex items-center justify-center gap-2 rounded-xl bg-white/10 py-2.5 font-medium text-white transition hover:bg-white/20"
                         >

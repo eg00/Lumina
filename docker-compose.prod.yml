@@ -43,7 +43,7 @@ services:
             INITIAL_MEDIA_NAME: '${INITIAL_MEDIA_NAME:-Photos}'
         volumes:
             - lumina-storage:/app/storage
-            - ${MEDIA_PATH:-./photos}:/photos:ro
+            - ${MEDIA_PATH:-./photos}:/photos:rw
         depends_on:
             db:
                 condition: service_healthy
@@ -75,7 +75,7 @@ services:
             AI_WORKER_URL: 'http://ai-worker:8000'
         volumes:
             - lumina-storage:/app/storage
-            - ${MEDIA_PATH:-./photos}:/photos:ro
+            - ${MEDIA_PATH:-./photos}:/photos:rw
         depends_on:
             app:
                 condition: service_started

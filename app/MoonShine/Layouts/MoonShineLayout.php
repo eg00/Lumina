@@ -8,6 +8,9 @@ use App\MoonShine\Pages\FeatureSettingsPage;
 use App\MoonShine\Resources\Media\MediaResource;
 use App\MoonShine\Resources\MediaSource\MediaSourceResource;
 use App\MoonShine\Resources\MediaTag\MediaTagResource;
+use Illuminate\Support\Facades\Vite;
+use MoonShine\AssetManager\Css;
+use MoonShine\AssetManager\Js;
 use MoonShine\ColorManager\ColorManager;
 use MoonShine\ColorManager\Palettes\NeutralPalette;
 use MoonShine\Contracts\ColorManager\ColorManagerContract;
@@ -28,6 +31,8 @@ final class MoonShineLayout extends AppLayout
     {
         return [
             ...parent::assets(),
+            Css::make(Vite::asset('resources/css/moonshine.css')),
+            Js::make(Vite::asset('resources/js/moonshine.ts'))->defer(),
         ];
     }
 

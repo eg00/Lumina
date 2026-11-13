@@ -1,9 +1,12 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form
+from fastapi.responses import Response
 from pydantic import BaseModel
-from PIL import Image
+from PIL import Image, ImageFilter
 from sentence_transformers import SentenceTransformer
 import os
+import io
 import logging
+from rembg import remove, new_session
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ai-worker")
@@ -11,6 +14,7 @@ logger = logging.getLogger("ai-worker")
 app = FastAPI(title="Lumina AI Worker")
 _text_model = None
 _image_model = None
+_rembg_session = None
 
 
 def get_text_model() -> SentenceTransformer:
@@ -31,6 +35,16 @@ def get_image_model() -> SentenceTransformer:
         _image_model = SentenceTransformer(model_name)
         logger.info("CLIP Image model loaded successfully.")
     return _image_model
+
+
+def get_rembg_session():
+    global _rembg_session
+    if _rembg_session is None:
+        model_name = os.getenv("REMBG_MODEL", "u2netp")
+        logger.info(f"Loading rembg model session: {model_name}...")
+        _rembg_session = new_session(model_name)
+        logger.info("rembg model session loaded successfully.")
+    return _rembg_session
 
 
 class TextEmbedRequest(BaseModel):
@@ -74,3 +88,32 @@ def embed_images(req: ImageEmbedRequest):
             logger.error(f"Failed to process image {path}: {e}")
 
     return {"results": results}
+
+
+@app.post("/portrait-blur")
+async def portrait_blur(
+    file: UploadFile = File(...),
+    blur_radius: int = Form(20),
+):
+    try:
+        contents = await file.read()
+        orig = Image.open(io.BytesIO(contents)).convert("RGB")
+        session = get_rembg_session()
+
+        # 1. Extract foreground alpha mask
+        mask = remove(orig, session=session, only_mask=True)
+        if mask.mode != "L":
+            mask = mask.convert("L")
+
+        # 2. Gaussian blur background
+        blurred = orig.filter(ImageFilter.GaussianBlur(radius=blur_radius))
+
+        # 3. Composite original foreground onto blurred background with mask
+        composite = Image.composite(orig, blurred, mask)
+
+        output = io.BytesIO()
+        composite.save(output, format="JPEG", quality=95)
+        return Response(content=output.getvalue(), media_type="image/jpeg")
+    except Exception as e:
+        logger.error(f"Portrait blur failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
