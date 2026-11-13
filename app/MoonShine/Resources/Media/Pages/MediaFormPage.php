@@ -9,11 +9,15 @@ use App\MoonShine\Resources\Media\MediaResource;
 use App\MoonShine\Resources\MediaTag\MediaTagResource;
 use Illuminate\Support\Facades\Storage;
 use MoonShine\Contracts\Core\TypeCasts\DataWrapperContract;
+use MoonShine\Contracts\UI\ActionButtonContract;
 use MoonShine\Contracts\UI\ComponentContract;
 use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Contracts\UI\FormBuilderContract;
+use MoonShine\Contracts\UI\ModalContract;
 use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Pages\Crud\FormPage;
+use MoonShine\Support\ListOf;
+use MoonShine\UI\Components\ActionButton;
 use MoonShine\UI\Components\FormBuilder;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Fields\ID;
@@ -35,7 +39,8 @@ class MediaFormPage extends FormPage
         return [
             Box::make('Media Information', [
                 ID::make(),
-                Preview::make('Thumbnail', 'thumbnail_path', static fn (MediaFile $item): string => $item->thumbnail_path ? Storage::disk('public')->url($item->thumbnail_path) : '')->image(),
+                Preview::make('Thumbnail', 'thumbnail_path', static fn (MediaFile $item): string => $item->thumbnail_path ? '<a href="'.route('media.stream', ['mediaFile' => $item->uuid]).'?v='.$item->updated_at?->timestamp.'" target="_blank" class="inline-block" title="Open Original"><img src="'.Storage::disk('public')->url($item->thumbnail_path).'?v='.$item->updated_at?->timestamp.'" class="h-44 w-auto rounded-lg object-contain border border-slate-200 dark:border-slate-700 bg-slate-900/5 dark:bg-slate-900/40 p-1 hover:opacity-90 transition shadow-sm" alt="Thumbnail" /></a>' : '-'),
+                Preview::make('Preview', 'preview_path', static fn (MediaFile $item): string => $item->preview_path ? '<a href="'.route('media.stream', ['mediaFile' => $item->uuid]).'?v='.$item->updated_at?->timestamp.'" target="_blank" class="inline-block" title="Open Original"><img src="'.Storage::disk('public')->url($item->preview_path).'?v='.$item->updated_at?->timestamp.'" class="max-h-96 w-auto rounded-lg object-contain border border-slate-200 dark:border-slate-700 bg-slate-900/5 dark:bg-slate-900/40 p-1 hover:opacity-90 transition shadow-sm" alt="Preview" /></a>' : '-'),
                 Preview::make('File Path', 'file_path'),
                 Preview::make('Media Type', 'media_type', static fn (MediaFile $item): string => $item->media_type->value ?? '')->badge(),
                 Preview::make('Mime Type', 'mime_type'),
@@ -47,6 +52,24 @@ class MediaFormPage extends FormPage
                 BelongsToMany::make('Tags', 'tags', resource: MediaTagResource::class)->selectMode(),
             ]),
         ];
+    }
+
+    /**
+     * @return ListOf<ActionButtonContract>
+     */
+    protected function buttons(): ListOf
+    {
+        return parent::buttons()->add(
+            ActionButton::make('Edit Photo')
+                ->icon('pencil-square')
+                ->canSee(static fn (?MediaFile $item): bool => $item instanceof MediaFile && in_array($item->mime_type, ['image/jpeg', 'image/png', 'image/webp'], true))
+                ->inModal(
+                    title: 'Image Editor',
+                    content: static fn (MediaFile $item): string => (string) view('admin.media.editor-modal', ['media' => $item]),
+                    name: static fn (MediaFile $item): string => 'media-editor-form-'.$item->id,
+                    builder: static fn (ModalContract $modal, ActionButtonContract $ctx): ModalContract => $modal->wide()
+                )
+        );
     }
 
     protected function rules(DataWrapperContract $item): array
