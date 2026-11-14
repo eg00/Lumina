@@ -112,9 +112,13 @@ services:
         volumes:
             - ./docker/ai-worker/app:/app/app
             - ./storage:/app/storage:ro
+            - ai-cache:/root/.cache/huggingface
+            - ai-u2net:/root/.u2net
         environment:
             PORT: 8000
 
 volumes:
     db-data:
     redis-data:
+    ai-cache:
+    ai-u2net:

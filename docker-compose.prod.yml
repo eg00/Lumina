@@ -119,6 +119,8 @@ services:
         restart: unless-stopped
         volumes:
             - lumina-storage:/app/storage:ro
+            - lumina-ai-cache:/root/.cache/huggingface
+            - lumina-ai-u2net:/root/.u2net
         environment:
             PORT: 8000
 
@@ -126,3 +128,5 @@ volumes:
     lumina-storage:
     lumina-db-data:
     lumina-redis-data:
+    lumina-ai-cache:
+    lumina-ai-u2net:

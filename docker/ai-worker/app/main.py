@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import Response
 from pydantic import BaseModel
@@ -11,10 +12,25 @@ from rembg import remove, new_session
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ai-worker")
 
-app = FastAPI(title="Lumina AI Worker")
 _text_model = None
 _image_model = None
 _rembg_session = None
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Pre-warming AI models on startup...")
+    try:
+        get_text_model()
+        get_image_model()
+        get_rembg_session()
+        logger.info("All AI models pre-warmed successfully.")
+    except Exception as e:
+        logger.error(f"Error during AI model pre-warming: {e}")
+    yield
+
+
+app = FastAPI(title="Lumina AI Worker", lifespan=lifespan)
 
 
 def get_text_model() -> SentenceTransformer:
