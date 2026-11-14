@@ -79,15 +79,15 @@ if (!window.mediaImageEditor) {
 
             rotate(deg) {
                 this.rotation = (this.rotation + deg) % 360;
-                const cropperImage = this.cropper?.getCropperImage();
+                const cropperImage = this.cropper?.getCropperImage() || this.$el?.querySelector('cropper-image');
                 if (cropperImage) {
-                    cropperImage.$rotate(deg);
+                    cropperImage.$rotate(`${deg}deg`);
                 }
             },
 
             setAspectRatio(ratio, key) {
                 this.aspectRatioKey = key;
-                const selection = this.cropper?.getCropperSelection();
+                const selection = this.cropper?.getCropperSelection() || this.$el?.querySelector('cropper-selection');
                 if (selection) {
                     selection.aspectRatio = isNaN(ratio) ? 0 : ratio;
                 }
@@ -99,8 +99,8 @@ if (!window.mediaImageEditor) {
                 this.portraitMode = false;
                 this.currentImageSrc = this.streamUrl;
                 this.errorMessage = '';
-                const cropperImage = this.cropper?.getCropperImage();
-                const selection = this.cropper?.getCropperSelection();
+                const cropperImage = this.cropper?.getCropperImage() || this.$el?.querySelector('cropper-image');
+                const selection = this.cropper?.getCropperSelection() || this.$el?.querySelector('cropper-selection');
                 if (cropperImage) {
                     cropperImage.$resetTransform();
                     cropperImage.src = this.streamUrl;
@@ -136,7 +136,7 @@ if (!window.mediaImageEditor) {
                     }
 
                     if (data.preview_data_url) {
-                        const cropperImage = this.cropper?.getCropperImage();
+                        const cropperImage = this.cropper?.getCropperImage() || this.$el?.querySelector('cropper-image');
                         if (cropperImage) {
                             cropperImage.src = data.preview_data_url;
                         }
@@ -149,8 +149,8 @@ if (!window.mediaImageEditor) {
             },
 
             getCropData() {
-                const cropperImage = this.cropper?.getCropperImage();
-                const cropperSelection = this.cropper?.getCropperSelection();
+                const cropperImage = this.cropper?.getCropperImage() || this.$el?.querySelector('cropper-image');
+                const cropperSelection = this.cropper?.getCropperSelection() || this.$el?.querySelector('cropper-selection');
                 if (!cropperImage || !cropperSelection) {
                     return { x: 0, y: 0, width: 1, height: 1 };
                 }
