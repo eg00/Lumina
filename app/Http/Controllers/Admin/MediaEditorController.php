@@ -48,13 +48,26 @@ class MediaEditorController extends Controller
         $portraitMode = (bool) $validated['portrait_mode'];
         $blurRadius = isset($validated['blur_radius']) ? (int) $validated['blur_radius'] : 20;
 
-        $updated = $this->imageEditorService->apply(
-            mediaFile: $mediaFile,
-            rotation: $rotation,
-            crop: $crop,
-            portraitMode: $portraitMode,
-            blurRadius: $blurRadius,
-        );
+        try {
+            $updated = $this->imageEditorService->apply(
+                mediaFile: $mediaFile,
+                rotation: $rotation,
+                crop: $crop,
+                portraitMode: $portraitMode,
+                blurRadius: $blurRadius,
+            );
+        } catch (\Throwable $e) {
+            Log::error("Failed to apply edit for media {$mediaFile->id}: {$e->getMessage()}", [
+                'exception' => $e,
+                'media_id' => $mediaFile->id,
+                'file_path' => $mediaFile->file_path,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
 
         $timestamp = time();
         $thumbnailUrl = $updated->thumbnail_path ? Storage::disk('public')->url($updated->thumbnail_path)."?v={$timestamp}" : null;

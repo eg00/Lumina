@@ -32,7 +32,9 @@ final class MoonShineLayout extends AppLayout
         return [
             ...parent::assets(),
             Css::make(Vite::asset('resources/css/moonshine.css')),
-            Js::make(Vite::asset('resources/js/moonshine.ts'))->defer(),
+            Js::make(Vite::asset('resources/js/moonshine.ts'))
+                ->customAttributes(['type' => 'module'])
+                ->defer(),
         ];
     }
 

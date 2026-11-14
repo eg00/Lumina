@@ -18,9 +18,11 @@ use MoonShine\Laravel\Fields\Relationships\BelongsToMany;
 use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\ActionButton;
+use MoonShine\UI\Components\FlexibleRender;
 use MoonShine\UI\Components\FormBuilder;
 use MoonShine\UI\Components\Layout\Box;
 use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Number;
 use MoonShine\UI\Fields\Preview;
 use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
@@ -46,10 +48,16 @@ class MediaFormPage extends FormPage
                 Preview::make('Mime Type', 'mime_type'),
                 Switcher::make('Favorite', 'is_favorite'),
                 Switcher::make('Ignored', 'is_ignored'),
-                Text::make('Country', 'country'),
-                Text::make('City', 'city'),
-                Text::make('Place Name', 'place_name'),
                 BelongsToMany::make('Tags', 'tags', resource: MediaTagResource::class)->selectMode(),
+            ]),
+
+            Box::make('Location', [
+                FlexibleRender::make(static fn (): string => (string) view('admin.media.location-picker')),
+                Number::make('Latitude', 'latitude')->step(0.0000001)->nullable(),
+                Number::make('Longitude', 'longitude')->step(0.0000001)->nullable(),
+                Text::make('Country', 'country')->nullable(),
+                Text::make('City', 'city')->nullable(),
+                Text::make('Place Name', 'place_name')->nullable(),
             ]),
         ];
     }

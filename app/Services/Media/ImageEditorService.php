@@ -27,6 +27,8 @@ class ImageEditorService
         bool $portraitMode,
         int $blurRadius = 20,
     ): MediaFile {
+        ini_set('memory_limit', '512M');
+
         $filePath = $mediaFile->file_path;
         if (! file_exists($filePath) || ! is_readable($filePath)) {
             throw new RuntimeException("Media file not found or not readable: {$filePath}");
@@ -106,9 +108,12 @@ class ImageEditorService
         }
 
         // 6. Atomically replace original file
-        if (! rename($tempPath, $filePath)) {
+        if (! @rename($tempPath, $filePath)) {
+            if (! @copy($tempPath, $filePath)) {
+                File::delete($tempPath);
+                throw new RuntimeException("Failed to overwrite original file: {$filePath}");
+            }
             File::delete($tempPath);
-            throw new RuntimeException("Failed to overwrite original file: {$filePath}");
         }
 
         // 7. Update dimensions, hash and size
