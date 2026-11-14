@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
 from fastapi.responses import Response
 from pydantic import BaseModel
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageOps
 from sentence_transformers import SentenceTransformer
 import os
 import io
@@ -113,13 +113,17 @@ async def portrait_blur(
 ):
     try:
         contents = await file.read()
-        orig = Image.open(io.BytesIO(contents)).convert("RGB")
+        raw_img = Image.open(io.BytesIO(contents))
+        orig = ImageOps.exif_transpose(raw_img) or raw_img
+        orig = orig.convert("RGB")
         session = get_rembg_session()
 
         # 1. Extract foreground alpha mask
         mask = remove(orig, session=session, only_mask=True)
         if mask.mode != "L":
             mask = mask.convert("L")
+        if mask.size != orig.size:
+            mask = mask.resize(orig.size, Image.Resampling.LANCZOS)
 
         # 2. Gaussian blur background
         blurred = orig.filter(ImageFilter.GaussianBlur(radius=blur_radius))
