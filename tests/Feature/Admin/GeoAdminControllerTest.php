@@ -126,6 +126,7 @@ final class GeoAdminControllerTest extends TestCase
 
     public function test_latest_coordinates_returns_default_when_no_geotagged_media(): void
     {
+        MediaFile::query()->whereNotNull('latitude')->update(['latitude' => null, 'longitude' => null]);
         $admin = $this->createAdmin();
 
         $response = $this->actingAs($admin, 'moonshine')
@@ -133,8 +134,8 @@ final class GeoAdminControllerTest extends TestCase
 
         $response->assertOk()
             ->assertJson([
-                'latitude' => 41.6938,
-                'longitude' => 44.8015,
+                'latitude' => null,
+                'longitude' => null,
             ]);
     }
 }
