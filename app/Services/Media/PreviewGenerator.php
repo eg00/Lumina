@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Media;
 
+use GdImage;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -95,7 +96,7 @@ class PreviewGenerator
         return $tempJpg;
     }
 
-    private function autoOrient(\GdImage $image, string $sourcePath): \GdImage
+    public function autoOrient(GdImage $image, string $sourcePath): GdImage
     {
         $exif = @exif_read_data($sourcePath);
         $orientation = $exif['Orientation'] ?? $exif['IFD0']['Orientation'] ?? 1;
