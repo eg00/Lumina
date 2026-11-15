@@ -18,7 +18,7 @@ class GalleryController extends Controller
         $defaultSort = Setting::get('features.default_sort', 'captured_at_desc');
         $sort = $request->query('sort', $defaultSort);
 
-        $query = MediaFile::active()->with('tags');
+        $query = MediaFile::active()->with(['tags' => fn ($q) => $q->where('is_public', true)]);
 
         match ($sort) {
             'captured_at_asc' => $query->orderByRaw('captured_at ASC NULLS LAST')->orderBy('id'),
@@ -33,7 +33,8 @@ class GalleryController extends Controller
 
         if ($request->query('tag')) {
             $query->whereHas('tags', function (Builder $query) use ($request): void {
-                $query->where('slug', $request->query('tag'));
+                $query->where('slug', $request->query('tag'))
+                    ->where('is_public', true);
             });
         }
 
@@ -62,6 +63,6 @@ class GalleryController extends Controller
 
         return $this->index($request)
             ->with('activeMediaId', $mediaFile->uuid)
-            ->with('activeMediaItem', $mediaFile->load('tags'));
+            ->with('activeMediaItem', $mediaFile->load(['tags' => fn ($q) => $q->where('is_public', true)]));
     }
 }

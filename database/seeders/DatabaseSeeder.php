@@ -16,6 +16,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // No seeders required for public gallery
+        $this->call(MediaTagSeeder::class);
     }
 }

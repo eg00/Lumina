@@ -27,6 +27,14 @@ class MediaTagFactory extends Factory
             'name' => $name,
             'slug' => Str::slug($name),
             'type' => fake()->randomElement(TagType::cases()),
+            'is_public' => true,
         ];
+    }
+
+    public function hidden(): static
+    {
+        return $this->state(fn (): array => [
+            'is_public' => false,
+        ]);
     }
 }

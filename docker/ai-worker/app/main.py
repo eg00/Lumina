@@ -7,6 +7,7 @@ from sentence_transformers import SentenceTransformer
 import os
 import io
 import logging
+import numpy as np
 from rembg import remove, new_session
 
 logging.basicConfig(level=logging.INFO)
@@ -137,3 +138,99 @@ async def portrait_blur(
     except Exception as e:
         logger.error(f"Portrait blur failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+_tag_embedding_cache: dict = {}
+
+
+class ClassifyTagsRequest(BaseModel):
+    paths: list[str] | None = None
+    image_path: str | None = None
+    image_paths: list[str] | None = None
+    candidate_tags: list[str] | None = None
+    tags: list[str] | None = None
+    candidates: list[str] | None = None
+    labels: list[str] | None = None
+    threshold: float = 0.26
+    top_k: int = 5
+    topK: int = 5
+    limit: int = 5
+
+
+def _candidate_list(req: ClassifyTagsRequest) -> list[str]:
+    for field in (req.candidate_tags, req.tags, req.candidates, req.labels):
+        if field:
+            return [str(t).strip() for t in field if str(t).strip()]
+    return []
+
+
+def _image_paths(req: ClassifyTagsRequest) -> list[str]:
+    paths: list[str] = []
+    if req.image_path:
+        paths.append(req.image_path)
+    if req.image_paths:
+        paths.extend(req.image_paths)
+    if req.paths:
+        paths.extend(req.paths)
+    seen = set()
+    out = []
+    for p in paths:
+        if p not in seen:
+            seen.add(p)
+            out.append(p)
+    return out
+
+
+@app.post("/classify-tags")
+def classify_tags(req: ClassifyTagsRequest):
+    candidate_tags = _candidate_list(req)
+    paths = _image_paths(req)
+
+    top_k = req.top_k or req.topK or req.limit or 5
+    if top_k < 1:
+        top_k = 5
+
+    if not paths:
+        return {"results": {}}
+
+    if not candidate_tags:
+        return {"results": {p: [] for p in paths}}
+
+    text_model = get_text_model()
+    image_model = get_image_model()
+
+    # Cache text embeddings per tag
+    missing = [t for t in candidate_tags if t not in _tag_embedding_cache]
+    if missing:
+        new_embs = text_model.encode(missing, normalize_embeddings=True)
+        for t, emb in zip(missing, new_embs):
+            _tag_embedding_cache[t] = np.asarray(emb, dtype=np.float32)
+
+    tag_vectors = np.array([_tag_embedding_cache[t] for t in candidate_tags], dtype=np.float32)
+
+    results = {}
+    for path in paths:
+        if not os.path.exists(path):
+            logger.warning(f"File not found: {path}")
+            results[path] = []
+            continue
+        try:
+            with Image.open(path) as img:
+                rgb_img = img.convert("RGB")
+                img_emb = np.asarray(image_model.encode(rgb_img, normalize_embeddings=True), dtype=np.float32)
+
+            scores = tag_vectors @ img_emb
+
+            matched = []
+            for idx, score in enumerate(scores):
+                score_f = float(score)
+                if score_f >= req.threshold:
+                    matched.append({"tag": candidate_tags[idx], "score": score_f})
+
+            matched.sort(key=lambda x: x["score"], reverse=True)
+            results[path] = matched[:top_k]
+        except Exception as e:
+            logger.error(f"Error classifying {path}: {e}")
+            results[path] = []
+
+    return {"results": results}

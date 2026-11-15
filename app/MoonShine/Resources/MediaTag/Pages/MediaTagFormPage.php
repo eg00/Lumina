@@ -14,6 +14,7 @@ use MoonShine\Laravel\Pages\Crud\FormPage;
 use MoonShine\UI\Components\FormBuilder;
 use MoonShine\UI\Fields\ID;
 use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -33,8 +34,10 @@ class MediaTagFormPage extends FormPage
             Slug::make('Slug', 'slug')->from('name'),
             Select::make('Type', 'type')->options([
                 'user' => 'User',
-                'auto' => 'Auto',
+                'event' => 'Event',
+                'ai_detected' => 'AI Detected',
             ])->default('user'),
+            Switcher::make('Is Public', 'is_public')->default(true),
         ];
     }
 

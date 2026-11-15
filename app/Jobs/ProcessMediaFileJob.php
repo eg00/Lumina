@@ -7,6 +7,7 @@ namespace App\Jobs;
 use App\Events\MediaProcessedEvent;
 use App\Models\MediaFile;
 use App\Models\Setting;
+use App\Services\Ai\ClipService;
 use App\Services\Media\ExifExtractor;
 use App\Services\Media\PreviewGenerator;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -36,8 +37,9 @@ class ProcessMediaFileJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(PreviewGenerator $previewGenerator, ExifExtractor $exifExtractor): void
+    public function handle(PreviewGenerator $previewGenerator, ExifExtractor $exifExtractor, ?ClipService $clipService = null): void
     {
+        $clipService ??= app(ClipService::class);
         $file = $this->mediaFile;
         $filePath = $file->file_path;
         $hash = $file->file_hash;
@@ -84,6 +86,10 @@ class ProcessMediaFileJob implements ShouldQueue
 
         if ($file->latitude !== null && $file->longitude !== null) {
             ReverseGeocodeJob::dispatch($file);
+        }
+
+        if ($previewPath && Setting::get('features.tags', true)) {
+            AutoTagMediaFileJob::dispatch($file);
         }
 
         if ($previewPath && Setting::get('features.ai_search', true)) {
