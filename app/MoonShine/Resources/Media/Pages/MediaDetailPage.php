@@ -37,7 +37,7 @@ class MediaDetailPage extends DetailPage
             ID::make()->sortable(),
             Preview::make('Thumbnail', 'thumbnail_path', static fn (MediaFile $item): string => $item->thumbnail_path ? '<a href="'.route('media.stream', ['mediaFile' => $item->uuid]).'?v='.$item->updated_at?->timestamp.'" target="_blank" class="inline-block" title="Open Original"><img src="'.Storage::disk('public')->url($item->thumbnail_path).'?v='.$item->updated_at?->timestamp.'" class="h-44 w-auto rounded-lg object-contain border border-slate-200 dark:border-slate-700 bg-slate-900/5 dark:bg-slate-900/40 p-1 hover:opacity-90 transition shadow-sm" alt="Thumbnail" /></a>' : '-'),
             Preview::make('Preview', 'preview_path', static fn (MediaFile $item): string => $item->preview_path ? '<a href="'.route('media.stream', ['mediaFile' => $item->uuid]).'?v='.$item->updated_at?->timestamp.'" target="_blank" class="inline-block" title="Open Original"><img src="'.Storage::disk('public')->url($item->preview_path).'?v='.$item->updated_at?->timestamp.'" class="max-h-96 w-auto rounded-lg object-contain border border-slate-200 dark:border-slate-700 bg-slate-900/5 dark:bg-slate-900/40 p-1 hover:opacity-90 transition shadow-sm" alt="Preview" /></a>' : '-'),
-            Text::make('File Path', 'file_path'),
+            Text::make('UUID', 'uuid'),
             Text::make('Media Type', 'media_type', static fn (MediaFile $item): string => $item->media_type->value)->badge(),
             Text::make('Mime Type', 'mime_type'),
             Text::make('Width', 'width'),
