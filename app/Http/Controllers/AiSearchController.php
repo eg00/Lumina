@@ -20,7 +20,7 @@ class AiSearchController extends Controller
             abort(404);
         }
 
-        $mediaFile->loadMissing(['tags', 'embedding']);
+        $mediaFile->loadMissing(['tags' => fn ($q) => $q->where('is_public', true), 'embedding']);
         $rawEmbedding = $mediaFile->embedding?->embedding;
 
         if (is_array($rawEmbedding) && $rawEmbedding !== []) {
@@ -31,7 +31,7 @@ class AiSearchController extends Controller
                 ->selectRaw('media_files.*, (media_embeddings.embedding <=> ?) as distance', [$vectorString])
                 ->where('media_files.id', '!=', $mediaFile->id)
                 ->orderBy('distance')
-                ->with('tags')
+                ->with(['tags' => fn ($q) => $q->where('is_public', true)])
                 ->paginate(40);
         } else {
             $similarMedia = MediaFile::active()
@@ -58,7 +58,7 @@ class AiSearchController extends Controller
                 ->join('media_embeddings', 'media_files.id', '=', 'media_embeddings.media_file_id')
                 ->selectRaw('media_files.*, (media_embeddings.embedding <=> ?) as distance', [$vectorString])
                 ->orderBy('distance')
-                ->with('tags')
+                ->with(['tags' => fn ($q) => $q->where('is_public', true)])
                 ->paginate(60)
                 ->withQueryString();
         } else {
@@ -70,13 +70,14 @@ class AiSearchController extends Controller
                             ->orWhere('country', 'ilike', "%{$query}%")
                             ->orWhere('place_name', 'ilike', "%{$query}%")
                             ->orWhereHas('tags', function (Builder $tagQuery) use ($query): void {
-                                $tagQuery->where('name', 'ilike', "%{$query}%");
+                                $tagQuery->where('name', 'ilike', "%{$query}%")
+                                    ->where('is_public', true);
                             });
                     });
                 })
                 ->latest('captured_at')
                 ->orderByDesc('id')
-                ->with('tags')
+                ->with(['tags' => fn ($q) => $q->where('is_public', true)])
                 ->paginate(60)
                 ->withQueryString();
         }
