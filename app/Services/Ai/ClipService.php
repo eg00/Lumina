@@ -63,4 +63,79 @@ class ClipService
 
         return [];
     }
+
+    /**
+     * @param  array<int, string>  $candidateTags
+     * @return array<int, array{tag: string, score: float}>
+     */
+    public function classifyTags(string $imagePath, array $candidateTags, float $threshold = 0.26, int $topK = 5): array
+    {
+        if ($candidateTags === []) {
+            return [];
+        }
+
+        try {
+            $response = Http::timeout(30)->post("{$this->baseUrl}/classify-tags", [
+                'paths' => [$imagePath],
+                'image_path' => $imagePath,
+                'candidate_tags' => array_values($candidateTags),
+                'threshold' => $threshold,
+                'top_k' => $topK,
+            ]);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                if (is_array($json)) {
+                    $results = $json['results'] ?? null;
+                    if (is_array($results)) {
+                        // Find the entry for this image path (or first)
+                        $entries = $results[$imagePath] ?? null;
+                        if (! is_array($entries)) {
+                            foreach ($results as $value) {
+                                if (is_array($value)) {
+                                    $entries = $value;
+                                    break;
+                                }
+                            }
+                        }
+                        if (is_array($entries)) {
+                            $out = [];
+                            foreach ($entries as $entry) {
+                                if (is_array($entry) && isset($entry['tag'])) {
+                                    $out[] = [
+                                        'tag' => (string) $entry['tag'],
+                                        'score' => (float) ($entry['score'] ?? 0.0),
+                                    ];
+                                } elseif (is_string($entry)) {
+                                    $out[] = ['tag' => $entry, 'score' => 0.0];
+                                }
+                            }
+
+                            return $out;
+                        }
+
+                        // Fallback: direct tags list
+                        foreach (['tags', 'matched_tags', 'matched', 'labels'] as $key) {
+                            if (isset($json[$key]) && is_array($json[$key])) {
+                                $out = [];
+                                foreach ($json[$key] as $entry) {
+                                    if (is_array($entry) && isset($entry['tag'])) {
+                                        $out[] = ['tag' => (string) $entry['tag'], 'score' => (float) ($entry['score'] ?? 0.0)];
+                                    } elseif (is_string($entry)) {
+                                        $out[] = ['tag' => $entry, 'score' => 0.0];
+                                    }
+                                }
+
+                                return $out;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Throwable $throwable) {
+            Log::warning('AI Worker classify-tags failed: '.$throwable->getMessage());
+        }
+
+        return [];
+    }
 }
