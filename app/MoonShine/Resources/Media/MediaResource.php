@@ -35,6 +35,14 @@ class MediaResource extends ModelResource
         ];
     }
 
+    /**
+     * @return string[]
+     */
+    protected function search(): array
+    {
+        return ['uuid'];
+    }
+
     protected function beforeDeleting(DataWrapperContract $item): DataWrapperContract
     {
         $item->getOriginal()->update(['is_ignored' => true]);
