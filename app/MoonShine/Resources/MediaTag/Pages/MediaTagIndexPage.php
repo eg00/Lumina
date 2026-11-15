@@ -14,6 +14,8 @@ use MoonShine\Support\ListOf;
 use MoonShine\UI\Components\Metrics\Wrapped\Metric;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Select;
+use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -34,6 +36,7 @@ class MediaTagIndexPage extends IndexPage
             ID::make()->sortable(),
             Text::make('Name', 'name')->sortable(),
             Text::make('Type', 'type')->badge(),
+            Switcher::make('Is Public', 'is_public')->updateOnPreview(),
         ];
     }
 
@@ -50,7 +53,14 @@ class MediaTagIndexPage extends IndexPage
      */
     protected function filters(): iterable
     {
-        return [];
+        return [
+            Switcher::make('Is Public', 'is_public'),
+            Select::make('Type', 'type')->options([
+                'user' => 'User',
+                'event' => 'Event',
+                'ai_detected' => 'AI Detected',
+            ])->nullable(),
+        ];
     }
 
     /**

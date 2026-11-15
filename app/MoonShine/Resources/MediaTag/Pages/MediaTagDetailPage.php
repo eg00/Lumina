@@ -10,6 +10,7 @@ use MoonShine\Contracts\UI\FieldContract;
 use MoonShine\Laravel\Pages\Crud\DetailPage;
 use MoonShine\UI\Components\Table\TableBuilder;
 use MoonShine\UI\Fields\ID;
+use MoonShine\UI\Fields\Switcher;
 use MoonShine\UI\Fields\Text;
 use Throwable;
 
@@ -28,6 +29,7 @@ class MediaTagDetailPage extends DetailPage
             Text::make('Name', 'name'),
             Text::make('Slug', 'slug'),
             Text::make('Type', 'type')->badge(),
+            Switcher::make('Is Public', 'is_public'),
         ];
     }
 
