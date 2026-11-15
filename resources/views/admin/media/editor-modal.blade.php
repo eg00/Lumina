@@ -15,6 +15,8 @@ if (!window.mediaImageEditor) {
             cropper: null,
             currentImageSrc: config.streamUrl,
             rotation: 0,
+            orientedNaturalWidth: 0,
+            orientedNaturalHeight: 0,
             aspectRatioKey: 'free',
             portraitMode: false,
             blurRadius: 20,
@@ -44,6 +46,22 @@ if (!window.mediaImageEditor) {
                 }
 
                 const createInstance = () => {
+                    if (!this.orientedNaturalWidth) {
+                        const rect = imgElement.getBoundingClientRect();
+                        let nw = imgElement.naturalWidth || 1;
+                        let nh = imgElement.naturalHeight || 1;
+                        if (rect.width > 0 && rect.height > 0 && nw > 0 && nh > 0) {
+                            const renderedRatio = rect.width / rect.height;
+                            const naturalRatio = nw / nh;
+                            const swappedRatio = nh / nw;
+                            if (Math.abs(renderedRatio - swappedRatio) < Math.abs(renderedRatio - naturalRatio)) {
+                                [nw, nh] = [nh, nw];
+                            }
+                        }
+                        this.orientedNaturalWidth = nw;
+                        this.orientedNaturalHeight = nh;
+                    }
+
                     if (this.cropper) {
                         this.cropper.destroy();
                     }
@@ -83,6 +101,8 @@ if (!window.mediaImageEditor) {
                 if (cropperImage) {
                     cropperImage.$rotate(`${deg}deg`);
                 }
+                // After rotating, stretch the selection to cover the whole image.
+                this.$nextTick(() => this.selectWholePhoto());
             },
 
             setAspectRatio(ratio, key) {
@@ -91,6 +111,24 @@ if (!window.mediaImageEditor) {
                 if (selection) {
                     selection.aspectRatio = isNaN(ratio) ? 0 : ratio;
                 }
+            },
+
+            selectWholePhoto() {
+                this.aspectRatioKey = 'whole';
+                const cropperImage = this.cropper?.getCropperImage() || this.$el?.querySelector('cropper-image');
+                const selection = this.cropper?.getCropperSelection() || this.$el?.querySelector('cropper-selection');
+                const canvas = this.cropper?.getCropperCanvas() || this.$el?.querySelector('cropper-canvas');
+                if (!cropperImage || !selection || !canvas) return;
+
+                const imgRect = cropperImage.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                const x = Math.max(0, Math.round(imgRect.left - canvasRect.left));
+                const y = Math.max(0, Math.round(imgRect.top - canvasRect.top));
+                const width = Math.max(1, Math.round(imgRect.width));
+                const height = Math.max(1, Math.round(imgRect.height));
+
+                selection.aspectRatio = 0;
+                selection.$change(x, y, width, height);
             },
 
             reset() {
@@ -156,8 +194,15 @@ if (!window.mediaImageEditor) {
                 }
 
                 const imgElement = cropperImage.$image || cropperImage;
-                const naturalWidth = imgElement.naturalWidth || 1;
-                const naturalHeight = imgElement.naturalHeight || 1;
+                const baseWidth = this.orientedNaturalWidth || (imgElement.naturalWidth || 1);
+                const baseHeight = this.orientedNaturalHeight || (imgElement.naturalHeight || 1);
+
+                // Account for the user-applied rotation when mapping back to pixels.
+                let naturalWidth = baseWidth;
+                let naturalHeight = baseHeight;
+                if (this.rotation % 180 !== 0) {
+                    [naturalWidth, naturalHeight] = [naturalHeight, naturalWidth];
+                }
 
                 const imgRect = cropperImage.getBoundingClientRect();
                 const selRect = cropperSelection.getBoundingClientRect();
@@ -266,6 +311,9 @@ if (window.Alpine) {
             </button>
             <button type="button" @click="setAspectRatio(16/9, '16:9')" :class="aspectRatioKey === '16:9' ? 'btn-primary' : ''" class="btn !py-1 !px-2.5 !text-xs cursor-pointer">
                 16:9
+            </button>
+            <button type="button" @click="selectWholePhoto()" :class="aspectRatioKey === 'whole' ? 'btn-primary' : ''" class="btn !py-1 !px-2.5 !text-xs cursor-pointer" title="Select entire photo">
+                Whole
             </button>
         </div>
     </div>

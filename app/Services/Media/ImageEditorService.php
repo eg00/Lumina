@@ -50,7 +50,23 @@ class ImageEditorService
             throw new RuntimeException("Failed to decode image from {$filePath}");
         }
 
-        // 2. Crop (Cropper.js getData coordinates are relative to original unrotated image)
+        // 1b. Auto-orient based on EXIF orientation (browsers rotate the preview,
+        //     GD does not). Without this the saved file loses its orientation tag
+        //     and appears rotated.
+        $image = $this->previewGenerator->autoOrient($image, $filePath);
+
+        // 2. Rotate first: frontend crop coordinates are expressed in the (rotated)
+        //    image space produced by Cropper, so the source image must be rotated
+        //    before cropping. (imagerotate rotates counter-clockwise for positive
+        //    values; photo rotation is clockwise, hence the negation.)
+        if ($rotation !== 0) {
+            $rotated = imagerotate($image, -$rotation, 0);
+            if ($rotated !== false) {
+                $image = $rotated;
+            }
+        }
+
+        // 3. Crop using the (now rotated) image dimensions
         $origW = imagesx($image);
         $origH = imagesy($image);
 
@@ -67,15 +83,6 @@ class ImageEditorService
         ]);
         if ($cropped !== false) {
             $image = $cropped;
-        }
-
-        // 3. Rotate if requested (-270, -180, -90, 90, 180, 270)
-        if ($rotation !== 0) {
-            // imagerotate rotates counter-clockwise for positive values; photo rotation is clockwise
-            $rotated = imagerotate($image, -$rotation, 0);
-            if ($rotated !== false) {
-                $image = $rotated;
-            }
         }
 
         // 4. Save to temporary file
@@ -113,6 +120,7 @@ class ImageEditorService
                 File::delete($tempPath);
                 throw new RuntimeException("Failed to overwrite original file: {$filePath}");
             }
+
             File::delete($tempPath);
         }
 
