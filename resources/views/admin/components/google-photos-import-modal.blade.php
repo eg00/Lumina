@@ -347,6 +347,8 @@
 </div>
 
 <script>
+let googlePhotosPickerWindow = null;
+
 if (!window.googlePhotosImporter) {
     window.googlePhotosImporter = function(config) {
         return {
@@ -362,7 +364,6 @@ if (!window.googlePhotosImporter) {
             sessionId: null,
             pickerUri: null,
             pollInterval: null,
-            pickerWindowRef: null,
             autoImport: true,
             importedCount: 0,
 
@@ -387,7 +388,7 @@ if (!window.googlePhotosImporter) {
                 this.successMessage = '';
 
                 // Open window on direct user click to avoid browser popup blockers
-                this.pickerWindowRef = window.open('about:blank', 'google_photos_picker', 'width=960,height=720,menubar=no,toolbar=no');
+                googlePhotosPickerWindow = window.open('about:blank', 'google_photos_picker', 'width=960,height=720,menubar=no,toolbar=no');
 
                 try {
                     const response = await fetch(this.createSessionUrl, {
@@ -403,8 +404,8 @@ if (!window.googlePhotosImporter) {
                     const data = await response.json();
 
                     if (!response.ok) {
-                        try { if (this.pickerWindowRef) this.pickerWindowRef.close(); } catch (e) {}
-                        this.pickerWindowRef = null;
+                        try { if (googlePhotosPickerWindow) googlePhotosPickerWindow.close(); } catch (e) {}
+                        googlePhotosPickerWindow = null;
                         const errText = data.error || 'Failed to create Google Photos picker session';
                         if (errText.includes('insufficient authentication scopes') || errText.includes('PERMISSION_DENIED')) {
                             throw new Error('Google Photos permissions need to be updated. Please <a href="/admin/page/feature-settings-page" class="font-bold underline text-primary">click here to Reconnect Account</a> in Feature Settings.');
@@ -415,8 +416,8 @@ if (!window.googlePhotosImporter) {
                     this.sessionId = data.id;
                     this.pickerUri = data.pickerUri;
 
-                    if (this.pickerWindowRef) {
-                        this.pickerWindowRef.location.href = data.pickerUri;
+                    if (googlePhotosPickerWindow) {
+                        googlePhotosPickerWindow.location.href = data.pickerUri;
                     } else {
                         window.open(data.pickerUri, '_blank');
                     }
@@ -424,8 +425,8 @@ if (!window.googlePhotosImporter) {
                     this.step = 'picking';
                     this.startPollingSession();
                 } catch (err) {
-                    try { if (this.pickerWindowRef) this.pickerWindowRef.close(); } catch (e) {}
-                    this.pickerWindowRef = null;
+                    try { if (googlePhotosPickerWindow) googlePhotosPickerWindow.close(); } catch (e) {}
+                    googlePhotosPickerWindow = null;
                     this.errorMessage = err.message || 'Error opening Google Photos picker';
                 } finally {
                     this.isCreatingSession = false;
@@ -434,12 +435,18 @@ if (!window.googlePhotosImporter) {
 
             reopenPickerWindow() {
                 if (this.pickerUri) {
-                    this.pickerWindowRef = window.open(this.pickerUri, 'google_photos_picker', 'width=960,height=720,menubar=no,toolbar=no');
+                    try {
+                        googlePhotosPickerWindow = window.open(this.pickerUri, 'google_photos_picker', 'width=960,height=720,menubar=no,toolbar=no');
+                    } catch (e) {
+                        window.open(this.pickerUri, '_blank');
+                    }
                 }
             },
 
             cancelPicking() {
                 this.stopPollingSession();
+                try { if (googlePhotosPickerWindow) googlePhotosPickerWindow.close(); } catch (e) {}
+                googlePhotosPickerWindow = null;
                 this.step = this.items.length > 0 ? 'preview' : 'initial';
             },
 
@@ -474,13 +481,13 @@ if (!window.googlePhotosImporter) {
                         this.stopPollingSession();
 
                         try {
-                            if (this.pickerWindowRef) {
-                                this.pickerWindowRef.close();
+                            if (googlePhotosPickerWindow) {
+                                googlePhotosPickerWindow.close();
                             }
                         } catch (e) {
                             // Cross-origin restriction on popup close
                         }
-                        this.pickerWindowRef = null;
+                        googlePhotosPickerWindow = null;
 
                         if (this.autoImport) {
                             await this.importDirectFromSession();
