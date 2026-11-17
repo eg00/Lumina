@@ -16,6 +16,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -42,12 +43,16 @@ class ImportGooglePhotosBatchJob implements ShouldQueue
         $source = MediaSource::query()->find($this->mediaSourceId);
 
         if ($source === null) {
+            Log::warning("ImportGooglePhotosBatchJob: MediaSource #{$this->mediaSourceId} not found.");
+
             return;
         }
 
         $accessToken = $service->getValidAccessToken();
         $total = count($this->items);
         $imported = 0;
+
+        Log::info("ImportGooglePhotosBatchJob: starting batch import of {$total} item(s) to source #{$source->id} ({$source->name})");
 
         $tempDir = storage_path('framework/temp/google_photos_import');
         File::ensureDirectoryExists($tempDir);
@@ -60,6 +65,8 @@ class ImportGooglePhotosBatchJob implements ShouldQueue
             $mimeType = isset($item['mimeType']) && is_string($item['mimeType']) ? $item['mimeType'] : 'image/jpeg';
 
             if ($baseUrl === '' || $photoId === '') {
+                Log::warning("ImportGooglePhotosBatchJob: skipping item #{$imported} due to empty baseUrl or photoId.");
+
                 continue;
             }
 
@@ -79,12 +86,14 @@ class ImportGooglePhotosBatchJob implements ShouldQueue
 
                 if (! $response->successful()) {
                     File::delete($tempPath);
+                    Log::warning("ImportGooglePhotosBatchJob: failed to download {$filename} (status: {$response->status()})");
                     $this->dispatchProgress($total, $imported, $filename, 'failed', $source->id);
 
                     continue;
                 }
-            } catch (Throwable) {
+            } catch (Throwable $e) {
                 File::delete($tempPath);
+                Log::error("ImportGooglePhotosBatchJob: exception downloading {$filename}: {$e->getMessage()}");
                 $this->dispatchProgress($total, $imported, $filename, 'failed', $source->id);
 
                 continue;
@@ -94,6 +103,7 @@ class ImportGooglePhotosBatchJob implements ShouldQueue
 
             if ($hash === false) {
                 File::delete($tempPath);
+                Log::warning("ImportGooglePhotosBatchJob: failed to compute sha256 for {$filename}");
 
                 continue;
             }
@@ -107,6 +117,7 @@ class ImportGooglePhotosBatchJob implements ShouldQueue
                     $existing->update(['google_photo_id' => $photoId]);
                 }
 
+                Log::info("ImportGooglePhotosBatchJob: photo {$filename} is a duplicate of existing media #{$existing->id} (hash {$hash}), skipping.");
                 $this->dispatchProgress($total, $imported, $filename, 'duplicate', $source->id);
 
                 continue;
@@ -164,8 +175,11 @@ class ImportGooglePhotosBatchJob implements ShouldQueue
 
             ProcessMediaFileJob::dispatch($mediaFile);
 
+            Log::info("ImportGooglePhotosBatchJob: successfully imported {$filename} to {$targetPath} (MediaFile #{$mediaFile->id})");
             $this->dispatchProgress($total, $imported, $filename, 'imported', $source->id);
         }
+
+        Log::info("ImportGooglePhotosBatchJob: batch completed ({$imported}/{$total} processed).");
     }
 
     private function dispatchProgress(int $total, int $imported, string $filename, string $status, int $sourceId): void
