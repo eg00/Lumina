@@ -244,12 +244,14 @@ const hasShootingData = computed(() => {
                     <button
                         v-if="item.city || item.place_name"
                         type="button"
-                        class="flex items-center gap-1 rounded-full bg-white/10 hover:bg-white/20 px-2 py-0.5 text-[11px] font-medium text-white/90 transition truncate max-w-[160px] sm:max-w-xs cursor-pointer border border-white/5"
+                        class="flex max-w-[160px] cursor-pointer items-center gap-1 truncate rounded-full border border-white/5 bg-white/10 px-2 py-0.5 text-[11px] font-medium text-white/90 transition hover:bg-white/20 sm:max-w-xs"
                         :title="item.place_name || item.city"
                         @click="toggleInfo"
                     >
                         <MapPin class="size-3 shrink-0 text-rose-400" />
-                        <span class="truncate">{{ item.city || item.place_name }}</span>
+                        <span class="truncate">{{
+                            item.city || item.place_name
+                        }}</span>
                     </button>
                 </div>
 
@@ -609,13 +611,20 @@ const hasShootingData = computed(() => {
                             class="flex flex-col gap-2 rounded-xl border border-white/5 bg-white/[0.03] p-3"
                         >
                             <div
-                                v-if="item.place_name || item.city || item.country"
+                                v-if="
+                                    item.place_name || item.city || item.country
+                                "
                                 class="flex items-center gap-1.5 font-medium text-white"
                             >
                                 <MapPin
                                     class="size-3.5 shrink-0 text-rose-400"
                                 />
-                                <span>{{ item.place_name || [item.city, item.country].filter(Boolean).join(', ') }}</span>
+                                <span>{{
+                                    item.place_name ||
+                                    [item.city, item.country]
+                                        .filter(Boolean)
+                                        .join(', ')
+                                }}</span>
                             </div>
                             <div
                                 v-if="item.latitude && item.longitude"

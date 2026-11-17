@@ -352,13 +352,20 @@ bun run build
 
 - [x] FrankenPHP Octane resident memory execution with Mercure SSE
 - [x] Local CLIP AI vector search and similarity discovery via pgvector
-- [x] Interactive Leaflet map & Nominatim geocoding
+- [x] Interactive Leaflet dark map & Nominatim reverse geocoding
 - [x] UUIDv7 public routing hardening against enumeration attacks
-- [x] Google Photos library import & automated sync integration
-- [ ] Multi-user collections and shared secret links
-- [ ] Face detection and person clustering
+- [x] In-app photo editor with adjustments, film presets, and bokeh simulation
+- [x] Google Photos library import via Photos Picker API
+- [ ] Apple Live Photos & Google Motion Photos interactive playback
+- [ ] "On This Day" memories and stories carousel with AI quality curation
+- [ ] Mobile auto-backup via WebDAV & ingestion API (PhotoSync compatible)
+- [ ] Shared albums & secret links with guest photo upload
+- [ ] Smart storage cleaner and duplicate detection (SHA-256 & visual similarity)
+- [ ] Batch date, time, and geo-tag editor
+- [ ] Face detection and person clustering (local InsightFace worker)
 - [ ] On-the-fly HLS video transcoding for 4K HEVC/AV1 clips
-- [ ] S3/B2 cloud storage driver support
+- [ ] S3 / Backblaze B2 cloud storage drivers
+- [ ] Local OCR text extraction and search
 
 ---
 

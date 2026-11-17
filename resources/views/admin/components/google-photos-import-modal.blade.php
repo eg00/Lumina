@@ -403,7 +403,8 @@ if (!window.googlePhotosImporter) {
                     const data = await response.json();
 
                     if (!response.ok) {
-                        if (this.pickerWindowRef) this.pickerWindowRef.close();
+                        try { if (this.pickerWindowRef) this.pickerWindowRef.close(); } catch (e) {}
+                        this.pickerWindowRef = null;
                         const errText = data.error || 'Failed to create Google Photos picker session';
                         if (errText.includes('insufficient authentication scopes') || errText.includes('PERMISSION_DENIED')) {
                             throw new Error('Google Photos permissions need to be updated. Please <a href="/admin/page/feature-settings-page" class="font-bold underline text-primary">click here to Reconnect Account</a> in Feature Settings.');
@@ -423,7 +424,8 @@ if (!window.googlePhotosImporter) {
                     this.step = 'picking';
                     this.startPollingSession();
                 } catch (err) {
-                    if (this.pickerWindowRef) this.pickerWindowRef.close();
+                    try { if (this.pickerWindowRef) this.pickerWindowRef.close(); } catch (e) {}
+                    this.pickerWindowRef = null;
                     this.errorMessage = err.message || 'Error opening Google Photos picker';
                 } finally {
                     this.isCreatingSession = false;
@@ -471,9 +473,14 @@ if (!window.googlePhotosImporter) {
                     if (res.ok && data.mediaItemsSet) {
                         this.stopPollingSession();
 
-                        if (this.pickerWindowRef && !this.pickerWindowRef.closed) {
-                            try { this.pickerWindowRef.close(); } catch (e) {}
+                        try {
+                            if (this.pickerWindowRef) {
+                                this.pickerWindowRef.close();
+                            }
+                        } catch (e) {
+                            // Cross-origin restriction on popup close
                         }
+                        this.pickerWindowRef = null;
 
                         if (this.autoImport) {
                             await this.importDirectFromSession();
@@ -485,6 +492,7 @@ if (!window.googlePhotosImporter) {
                         this.errorMessage = 'Google Photos selection is not finished yet. Please select photos and click Done in the Google window.';
                     }
                 } catch (e) {
+                    console.error('Session status check error:', e);
                     if (manual) {
                         this.errorMessage = 'Could not check session status. Please try again.';
                     }
