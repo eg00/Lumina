@@ -50,26 +50,19 @@ class AutoTagMediaFileJob implements ShouldQueue
 
         $tagIds = [];
         foreach ($matched as $entry) {
-            $tagName = null;
-            if (is_array($entry)) {
-                $tagName = $entry['tag'] ?? $entry['name'] ?? $entry['label'] ?? null;
-            } elseif (is_string($entry)) {
-                $tagName = $entry;
-            }
+            $tagName = trim($entry['tag']);
 
-            if (! is_string($tagName) || $tagName === '') {
+            if ($tagName === '') {
                 continue;
             }
 
             $tag = MediaTag::query()->where('name', $tagName)->first();
-            if ($tag === null) {
-                $tag = MediaTag::create([
-                    'name' => $tagName,
-                    'slug' => Str::slug($tagName),
-                    'type' => TagType::AiDetected,
-                    'is_public' => false,
-                ]);
-            }
+            $tag ??= MediaTag::query()->create([
+                'name' => $tagName,
+                'slug' => Str::slug($tagName),
+                'type' => TagType::AiDetected,
+                'is_public' => false,
+            ]);
 
             $tagIds[] = $tag->id;
         }

@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
  * @property int $id
  * @property string $uuid
  * @property ?int $media_source_id
+ * @property ?string $google_photo_id
  * @property string $file_path
  * @property string $storage_disk
  * @property string $file_hash
@@ -68,6 +69,7 @@ use Illuminate\Support\Str;
 #[Fillable([
     'uuid',
     'media_source_id',
+    'google_photo_id',
     'file_path',
     'storage_disk',
     'file_hash',

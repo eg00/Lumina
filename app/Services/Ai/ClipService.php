@@ -98,6 +98,7 @@ class ClipService
                                 }
                             }
                         }
+
                         if (is_array($entries)) {
                             $out = [];
                             foreach ($entries as $entry) {

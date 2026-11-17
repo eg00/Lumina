@@ -33,5 +33,7 @@ test('existing tags are backfilled as public during migration', function (): voi
         'type' => TagType::User,
     ]);
 
-    expect($tag->fresh()->is_public)->toBeTrue();
+    $tag->refresh();
+
+    expect($tag->is_public)->toBeTrue();
 });

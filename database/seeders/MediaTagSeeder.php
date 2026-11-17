@@ -52,14 +52,11 @@ class MediaTagSeeder extends Seeder
         $tags = array_slice($tags, 0, 150);
 
         foreach ($tags as $name) {
-            MediaTag::firstOrCreate(
-                ['name' => $name],
-                [
-                    'slug' => Str::slug($name),
-                    'type' => TagType::AiDetected,
-                    'is_public' => false,
-                ]
-            );
+            MediaTag::query()->firstOrCreate(['name' => $name], [
+                'slug' => Str::slug($name),
+                'type' => TagType::AiDetected,
+                'is_public' => false,
+            ]);
         }
     }
 }

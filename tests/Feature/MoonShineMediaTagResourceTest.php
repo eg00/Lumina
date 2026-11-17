@@ -12,5 +12,7 @@ test('admin can toggle tag is_public attribute', function (): void {
 
     $tag->update(['is_public' => true]);
 
-    expect($tag->fresh()->is_public)->toBeTrue();
+    $tag->refresh();
+
+    expect($tag->is_public)->toBeTrue();
 });

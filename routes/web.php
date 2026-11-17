@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\GeoAdminController;
+use App\Http\Controllers\Admin\GooglePhotosAuthController;
+use App\Http\Controllers\Admin\GooglePhotosImportController;
 use App\Http\Controllers\Admin\MediaEditorController;
 use App\Http\Controllers\AiSearchController;
 use App\Http\Controllers\GalleryController;
@@ -33,4 +35,15 @@ Route::middleware(['web', 'auth:moonshine'])->prefix('admin/geo')->group(functio
     Route::get('reverse', [GeoAdminController::class, 'reverse'])->name('admin.geo.reverse');
     Route::get('search', [GeoAdminController::class, 'search'])->name('admin.geo.search');
     Route::get('latest-coordinates', [GeoAdminController::class, 'latestCoordinates'])->name('admin.geo.latest');
+});
+
+Route::middleware(['web', 'auth:moonshine'])->prefix('admin/google-photos')->group(function (): void {
+    Route::get('redirect', [GooglePhotosAuthController::class, 'redirect'])->name('admin.google-photos.redirect');
+    Route::get('callback', [GooglePhotosAuthController::class, 'callback'])->name('admin.google-photos.callback');
+    Route::post('disconnect', [GooglePhotosAuthController::class, 'disconnect'])->name('admin.google-photos.disconnect');
+    Route::post('session', [GooglePhotosImportController::class, 'createSession'])->name('admin.google-photos.session.create');
+    Route::get('session/{sessionId}', [GooglePhotosImportController::class, 'sessionStatus'])->name('admin.google-photos.session.status');
+    Route::get('items', [GooglePhotosImportController::class, 'items'])->name('admin.google-photos.items');
+    Route::get('thumbnail', [GooglePhotosImportController::class, 'thumbnail'])->name('admin.google-photos.thumbnail');
+    Route::post('import', [GooglePhotosImportController::class, 'import'])->name('admin.google-photos.import');
 });

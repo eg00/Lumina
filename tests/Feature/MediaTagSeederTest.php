@@ -12,14 +12,14 @@ uses(RefreshDatabase::class);
 test('media tag seeder creates base english tags with is_public false', function (): void {
     $this->seed(MediaTagSeeder::class);
 
-    $count = MediaTag::where('type', TagType::AiDetected)->count();
+    $count = MediaTag::query()->where('type', TagType::AiDetected)->count();
     expect($count)->toBeGreaterThanOrEqual(100);
 
-    $allPrivate = MediaTag::where('type', TagType::AiDetected)->where('is_public', true)->count();
+    $allPrivate = MediaTag::query()->where('type', TagType::AiDetected)->where('is_public', true)->count();
     expect($allPrivate)->toBe(0);
 
     // Common tags exist
-    expect(MediaTag::where('name', 'landscape')->exists())->toBeTrue()
-        ->and(MediaTag::where('name', 'portrait')->exists())->toBeTrue()
-        ->and(MediaTag::where('name', 'sunset')->exists())->toBeTrue();
+    expect(MediaTag::query()->where('name', 'landscape')->exists())->toBeTrue()
+        ->and(MediaTag::query()->where('name', 'portrait')->exists())->toBeTrue()
+        ->and(MediaTag::query()->where('name', 'sunset')->exists())->toBeTrue();
 });

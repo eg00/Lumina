@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\MediaFile;
 use App\Models\MediaTag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
 
@@ -27,14 +28,18 @@ test('gallery index only returns public tags and filters by public tag slug', fu
     $response = test()->get(route('home'));
     $response->assertOk();
 
-    $mediaItems = $response->viewData('page')['props']['media']['data'];
-    $fileItem = collect($mediaItems)->firstWhere('uuid', $file->uuid);
-
-    expect($fileItem['tags'])->toHaveCount(1)
-        ->and($fileItem['tags'][0]['id'])->toBe($publicTag->id);
+    $response->assertInertia(fn (Assert $page): Assert => $page
+        ->component('Gallery/Index')
+        ->has('media.data', 1)
+        ->where('media.data.0.uuid', $file->uuid)
+        ->has('media.data.0.tags', 1)
+        ->where('media.data.0.tags.0.id', $publicTag->id)
+    );
 
     // Filtering by hidden tag slug returns empty result
     $hiddenFilterResponse = test()->get(route('home', ['tag' => 'hidden-glitch']));
-    $hiddenItems = $hiddenFilterResponse->viewData('page')['props']['media']['data'];
-    expect($hiddenItems)->toBeEmpty();
+    $hiddenFilterResponse->assertInertia(fn (Assert $page): Assert => $page
+        ->component('Gallery/Index')
+        ->has('media.data', 0)
+    );
 });
