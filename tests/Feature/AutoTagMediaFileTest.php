@@ -35,14 +35,20 @@ test('auto tag job classifies preview image and attaches tags preserving is_publ
             ['tag' => 'sunset', 'score' => 0.28],
         ]);
 
-    $job = new AutoTagMediaFileJob($file);
-    $job->handle($mockClip);
+    app()->instance(ClipService::class, $mockClip);
 
-    $attachedTags = $file->fresh()->tags;
+    $job = new AutoTagMediaFileJob($file);
+    app()->call($job->handle(...));
+
+    $file->refresh();
+    $attachedTags = $file->tags;
     expect($attachedTags)->toHaveCount(2);
 
     $portrait = $attachedTags->firstWhere('name', 'portrait');
     $sunset = $attachedTags->firstWhere('name', 'sunset');
+
+    test()->assertNotNull($portrait);
+    test()->assertNotNull($sunset);
 
     // Existing user tag retained its public status
     expect($portrait->is_public)->toBeTrue()

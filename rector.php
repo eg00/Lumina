@@ -33,6 +33,7 @@ return RectorConfig::configure()
         privatization: true,
         typeDeclarations: true,
         rectorPreset: true,
+        earlyReturn: true,
     )
     ->withSkip([
         CompactToVariablesRector::class,

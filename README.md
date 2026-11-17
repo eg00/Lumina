@@ -354,7 +354,7 @@ bun run build
 - [x] Local CLIP AI vector search and similarity discovery via pgvector
 - [x] Interactive Leaflet map & Nominatim geocoding
 - [x] UUIDv7 public routing hardening against enumeration attacks
-- [ ] Google Photos library import & automated sync integration
+- [x] Google Photos library import & automated sync integration
 - [ ] Multi-user collections and shared secret links
 - [ ] Face detection and person clustering
 - [ ] On-the-fly HLS video transcoding for 4K HEVC/AV1 clips

@@ -51,6 +51,23 @@ class MediaIndexPage extends IndexPage
     /**
      * @return ListOf<ActionButtonContract>
      */
+    protected function topLeftButtons(): ListOf
+    {
+        return parent::topLeftButtons()->add(
+            ActionButton::make('Import from Google Photos')
+                ->icon('arrow-down-tray')
+                ->inModal(
+                    title: 'Import from Google Photos',
+                    content: static fn (): string => (string) view('admin.components.google-photos-import-modal'),
+                    name: 'google-photos-import-modal',
+                    builder: static fn (ModalContract $modal): ModalContract => $modal->wide()
+                )
+        );
+    }
+
+    /**
+     * @return ListOf<ActionButtonContract>
+     */
     protected function buttons(): ListOf
     {
         return parent::buttons()->add(

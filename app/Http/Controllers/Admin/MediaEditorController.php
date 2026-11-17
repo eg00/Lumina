@@ -56,16 +56,16 @@ class MediaEditorController extends Controller
                 portraitMode: $portraitMode,
                 blurRadius: $blurRadius,
             );
-        } catch (\Throwable $e) {
-            Log::error("Failed to apply edit for media {$mediaFile->id}: {$e->getMessage()}", [
-                'exception' => $e,
+        } catch (\Throwable $throwable) {
+            Log::error("Failed to apply edit for media {$mediaFile->id}: {$throwable->getMessage()}", [
+                'exception' => $throwable,
                 'media_id' => $mediaFile->id,
                 'file_path' => $mediaFile->file_path,
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage(),
+                'message' => $throwable->getMessage(),
             ], 422);
         }
 
