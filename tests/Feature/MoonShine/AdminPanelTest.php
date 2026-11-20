@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Jobs\ScanMediaSourceJob;
 use App\Models\MediaFile;
 use App\Models\MediaSource;
 use App\Models\Setting;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Queue;
 use MoonShine\Laravel\Models\MoonshineUser;
 
 uses(RefreshDatabase::class);
@@ -47,13 +48,10 @@ test('deleting media in moonshine marks file as ignored tombstone', function ():
 });
 
 test('admin can trigger scan on media source', function (): void {
-    $tempDir = sys_get_temp_dir().'/test_scan_'.uniqid('', true);
-    mkdir($tempDir);
-    $filePath = $tempDir.'/photo.jpg';
-    copy(base_path('tests/fixtures/sample_with_gps.jpg'), $filePath);
+    Queue::fake([ScanMediaSourceJob::class]);
 
     $admin = MoonshineUser::factory()->create();
-    $source = MediaSource::factory()->create(['path' => $tempDir, 'is_active' => true]);
+    $source = MediaSource::factory()->create(['name' => 'Test Source', 'is_active' => true]);
 
     test()->withoutMiddleware(PreventRequestForgery::class)
         ->actingAs($admin, 'moonshine');
@@ -63,13 +61,9 @@ test('admin can trigger scan on media source', function (): void {
 
     $response->assertSuccessful();
 
-    test()->assertDatabaseHas('media_files', [
-        'media_source_id' => $source->id,
-        'file_path' => $filePath,
-    ]);
-
-    File::delete($filePath);
-    @rmdir($tempDir);
+    Queue::assertPushed(ScanMediaSourceJob::class, function (ScanMediaSourceJob $job) use ($source): bool {
+        return $job->mediaSource->id === $source->id;
+    });
 });
 
 test('admin can view and update feature settings in moonshine', function (): void {

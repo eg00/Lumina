@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\MoonShine\Resources\MediaSource;
 
+use App\Jobs\ScanMediaSourceJob;
 use App\Models\MediaSource;
 use App\MoonShine\Resources\MediaSource\Pages\MediaSourceDetailPage;
 use App\MoonShine\Resources\MediaSource\Pages\MediaSourceFormPage;
 use App\MoonShine\Resources\MediaSource\Pages\MediaSourceIndexPage;
-use App\Services\Scanner\DirectoryScanner;
 use MoonShine\Contracts\Core\PageContract;
 use MoonShine\Laravel\Resources\ModelResource;
 use MoonShine\Support\Attributes\AsyncMethod;
@@ -38,12 +38,13 @@ class MediaSourceResource extends ModelResource
     }
 
     #[AsyncMethod]
-    public function scan(DirectoryScanner $scanner): void
+    public function scan(): void
     {
         $sourceId = request()->integer('resourceItem');
         $source = MediaSource::query()->findOrFail($sourceId);
-        $scanner->scan($source);
 
-        toast("Scan completed for {$source->name}", ToastType::SUCCESS);
+        ScanMediaSourceJob::dispatch($source);
+
+        toast("Scan started in background for {$source->name}", ToastType::INFO);
     }
 }

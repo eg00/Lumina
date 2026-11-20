@@ -12,6 +12,8 @@ use App\Models\MediaFile;
 use App\Models\MediaSource;
 use Carbon\CarbonImmutable;
 use File;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\Finder\Finder;
 
 class DirectoryScanner
@@ -22,6 +24,24 @@ class DirectoryScanner
         $skippedCount = 0;
         $reusedCount = 0;
         $newCount = 0;
+
+        if (! is_dir($source->path)) {
+            Log::warning("DirectoryScanner: source path '{$source->path}' does not exist or is not a directory.");
+
+            return new ScanResult(
+                totalScanned: 0,
+                newCount: 0,
+                reusedCount: 0,
+                skippedCount: 0,
+            );
+        }
+
+        /** @var Collection<string, MediaFile> $existingMap */
+        $existingMap = MediaFile::query()
+            ->where('media_source_id', $source->id)
+            ->select(['id', 'file_path', 'mtime', 'is_ignored', 'file_hash', 'preview_path', 'thumbnail_path', 'dominant_color'])
+            ->get()
+            ->keyBy('file_path');
 
         $finder = app(Finder::class);
         $finder->files()
@@ -42,7 +62,7 @@ class DirectoryScanner
             $mtime = CarbonImmutable::createFromTimestamp($file->getMTime());
             $scanned++;
 
-            $existing = MediaFile::query()->where('file_path', $filePath)->first();
+            $existing = $existingMap->get($filePath);
 
             if ($existing && ($existing->is_ignored === true || $existing->mtime->timestamp === $mtime->timestamp)) {
                 $skippedCount++;
@@ -98,6 +118,7 @@ class DirectoryScanner
                     ]);
                 }
 
+                $existingMap->put($filePath, $mediaFile);
                 $reusedCount++;
                 $newCount++;
 
@@ -116,6 +137,7 @@ class DirectoryScanner
                 'is_ignored' => false,
             ]);
 
+            $existingMap->put($filePath, $mediaFile);
             ProcessMediaFileJob::dispatch($mediaFile);
             $newCount++;
 
